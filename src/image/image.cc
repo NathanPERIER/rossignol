@@ -382,6 +382,8 @@ basic_image<Colour>::basic_image(std::size_t width, std::size_t height): _width(
     }
 }
 
+template basic_image<bool>::basic_image(std::size_t width, std::size_t height);
+
 template <typename Colour>
 basic_image<Colour> basic_image<Colour>::clone() const {
     basic_image<Colour> res(_width, _height);
