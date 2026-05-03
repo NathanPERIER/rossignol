@@ -2,6 +2,7 @@
 rossignol_sources = [
     'colour/rgb.cc',
     'image/image.cc',
+    'image/algorithm/binarise.cc',
     'image/algorithm/greyscale.cc',
     'utils/io/file.cc'
 ]
