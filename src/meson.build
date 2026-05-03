@@ -1,7 +1,8 @@
 
 rossignol_sources = [
     'colour/rgb.cc',
-    'image/image.cc'
+    'image/image.cc',
+    'utils/io/file.cc'
 ]
 
 rossignol_deps = [fmt_dep, png_dep]
