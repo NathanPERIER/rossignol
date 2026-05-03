@@ -11,10 +11,23 @@ struct min_max_channel {
     const uint8_t max;
 
     static min_max_channel from(const rol::rgba& col) {
-        return min_max_channel {
-            .min = std::min(std::min(col.r, col.g), col.b),
-            .max = std::max(std::max(col.r, col.g), col.b)
-        };
+        if(col.r < col.g) {
+            if(col.b <= col.r) {
+                return min_max_channel { .min = col.b, .max = col.g };
+            }
+            if(col.g <= col.b) {
+                return min_max_channel { .min = col.r, .max = col.b };
+            }
+            return min_max_channel { .min = col.r, .max = col.g };
+        } else { // col.g <= col.r
+            if(col.b <= col.g) {
+                return min_max_channel { .min = col.b, .max = col.r };
+            }
+            if(col.r <= col.b) {
+                return min_max_channel { .min = col.g, .max = col.b };
+            }
+            return min_max_channel { .min = col.g, .max = col.r };
+        }
     }
 };
 
