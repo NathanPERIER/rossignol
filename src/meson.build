@@ -1,5 +1,7 @@
 
-rossignol_sources = []
+rossignol_sources = [
+    'colour/rgb.cc'
+]
 
 rossignol_deps = [fmt_dep, png_dep]
 
