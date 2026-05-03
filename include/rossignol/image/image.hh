@@ -17,6 +17,15 @@ class basic_image {
 public:
     basic_image(std::size_t width, std::size_t height);
 
+    basic_image(basic_image<Colour>&&) = default;
+    basic_image<Colour>& operator=(basic_image<Colour>&&) = default;
+
+    /// @brief creates a new image that points to the same underlying buffer as the current image
+    basic_image<Colour> share() const { return basic_image<Colour>(*this); }
+
+    /// @brief creates copy of the current image
+    basic_image<Colour> clone() const;
+
     std::size_t width() const { return _width; }
     std::size_t height() const { return _height; }
 
@@ -29,8 +38,11 @@ public:
 private:
     std::size_t _width;
     std::size_t _height;
-    std::unique_ptr<Colour[]> _pixels;
+    std::shared_ptr<Colour[]> _pixels;
     std::vector<std::span<Colour>> _rows;
+
+    basic_image(const basic_image<Colour>&) = default;
+    basic_image<Colour>& operator=(const basic_image<Colour>&) = default;
 };
 
 

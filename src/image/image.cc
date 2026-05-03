@@ -319,11 +319,20 @@ void print_info(read_structs_holder& holder) {
 namespace rol {
 
 template <typename Colour>
-basic_image<Colour>::basic_image(std::size_t width, std::size_t height): _width(width), _height(height), _pixels(std::make_unique<Colour[]>(_width * _height)) {
+basic_image<Colour>::basic_image(std::size_t width, std::size_t height): _width(width), _height(height), _pixels(std::make_shared<Colour[]>(_width * _height)) {
     _rows.reserve(height);
     for(std::size_t y = 0; y < _height; y++) {
         _rows.push_back(std::span<Colour>(_pixels.get() + _width * y, _width));
     }
+}
+
+template <typename Colour>
+basic_image<Colour> basic_image<Colour>::clone() const {
+    basic_image<Colour> res(_width, _height);
+    for(std::size_t y = 0; y < _height; y++) {
+        std::copy(_rows[y].begin(), _rows[y].end(), res._rows[y].begin());
+    }
+    return res;
 }
 
 image parse_image(std::span<const uint8_t> raw) {
