@@ -40,4 +40,7 @@ using binary_image = basic_image<bool>;
 
 using image = std::variant<rgb_image, greyscale_image, binary_image>;
 
+
+image parse_image(std::span<const uint8_t> raw);
+
 } // namespace rol
