@@ -117,6 +117,13 @@ void read_data_callback(png_struct* png, png_byte* data, png_size_t length) {
     *buf = buf->subspan(length);
 }
 
+void write_data_callback(png_struct* png, png_byte* data, png_size_t size) {
+    std::vector<uint8_t>* buf = reinterpret_cast<std::vector<uint8_t>*>(png_get_io_ptr(png));
+    buf->insert(buf->end(), data, data + size);
+}
+
+void flush_data_callback(png_struct*) { /* nothing to do here */ }
+
 
 /// @brief helper to read a colour without alpha to a struct with alpha
 template <typename Colour>
@@ -313,6 +320,55 @@ void print_info(read_structs_holder& holder) {
     list_chunks(holder.png, holder.end_info);
 }
 
+
+struct dump_image_impl {
+
+    template <typename Colour>
+    std::vector<uint8_t> operator()(rol::basic_image<Colour>& img) {
+        int colour_type;
+        if constexpr (std::same_as<Colour, rol::rgba>) {
+            colour_type = PNG_COLOR_TYPE_RGBA;
+        } else if constexpr (std::same_as<Colour, rol::greyscalea>) {
+            colour_type = PNG_COLOR_TYPE_GRAY_ALPHA;
+        } else {
+            throw std::runtime_error("Unsupported image format for writing");
+        }
+
+        ::write_structs_holder holder = ::write_structs_holder::make();
+
+        png_set_IHDR(
+            holder.png,
+            holder.info,
+            img.width(),
+            img.height(),
+            8,
+            colour_type,
+            PNG_INTERLACE_NONE,
+            PNG_COMPRESSION_TYPE_DEFAULT,
+            PNG_FILTER_TYPE_DEFAULT
+        );
+
+        // const size_t row_bytes = png_get_rowbytes(holder.png, holder.info);
+        // assert(row_bytes == (_width * sizeof(npp::rgba)));
+
+        std::vector<png_byte*> row_pointers;
+        row_pointers.reserve(img.height());
+        for(size_t y = 0; y < img.height(); y++) {
+            row_pointers.push_back(reinterpret_cast<png_byte*>(img[y].data()));
+        }
+
+        std::vector<uint8_t> res;
+        png_set_write_fn(holder.png, &res, write_data_callback, flush_data_callback);
+
+        png_write_info(holder.png, holder.info);
+        png_write_image(holder.png, row_pointers.data()); // Warning: systematic copy here
+        png_write_end(holder.png, nullptr);
+
+        return res;
+    }
+};
+
+
 } // anonymous namespace
 
 
@@ -359,6 +415,10 @@ image parse_image(std::span<const uint8_t> raw) {
     ::print_info(holder);
 
     return res;
+}
+
+std::vector<uint8_t> dump_image(image& img) {
+    return std::visit(::dump_image_impl{}, img);
 }
 
 } // namespace rol
