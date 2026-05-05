@@ -92,7 +92,7 @@ public:
             case rol::layer_name::green: // Implicitely fallback to grey
             case rol::layer_name::blue:  // Implicitely fallback to grey
             case rol::layer_name::grey:  return rol::detail::extract_channel(img); // Implicit conversion to grey
-            case rol::layer_name::alpha: return rol::layer(img.width(), img.height(), 255); // Implicitely fully opaque
+            case rol::layer_name::alpha: return rol::layer(img.size(), 255); // Implicitely fully opaque
             default: throw std::runtime_error("Unsupported layer for extraction");
         }
     }

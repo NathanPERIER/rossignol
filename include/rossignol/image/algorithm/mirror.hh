@@ -15,7 +15,7 @@ basic_image<Colour> vertical_mirror(const basic_image<Colour>& img) {
 
 template <typename Colour>
 basic_image<Colour> horizontal_mirror(const basic_image<Colour>& img) {
-    basic_image<Colour> res(img.width(), img.height());
+    basic_image<Colour> res(img.size());
     for(std::size_t y = 0; y < img.height(); y++) {
         std::copy(img[y].rbegin(), img[y].rend(), res[y].begin());
     }

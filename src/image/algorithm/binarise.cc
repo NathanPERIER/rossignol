@@ -28,7 +28,7 @@ int16_t fs_diff(uint8_t grey, bool bw) {
 namespace rol::detail {
 
 binary_image floyd_steinberg(const greyscale_image& img) {
-    binary_image res(img.width(), img.height());
+    binary_image res(img.size());
 
     /// @brief Correction values for the current row
     std::vector<double> correction(img.width(), 0.0);

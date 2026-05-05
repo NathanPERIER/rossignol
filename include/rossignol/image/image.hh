@@ -13,13 +13,18 @@
 
 namespace rol {
 
+struct image_size {
+    std::size_t width;
+    std::size_t height;
+};
+
 template <typename Colour>
 class basic_image {
 public:
-    basic_image(std::size_t width, std::size_t height);
+    basic_image(image_size size);
 
     /// @brief creates a plain image filled with a given colour
-    basic_image(std::size_t width, std::size_t height, Colour fill);
+    basic_image(image_size size, Colour fill);
 
     basic_image(basic_image<Colour>&&) = default;
     basic_image<Colour>& operator=(basic_image<Colour>&&) = default;
@@ -30,8 +35,9 @@ public:
     /// @brief creates copy of the current image
     basic_image<Colour> clone() const;
 
-    std::size_t width() const { return _width; }
-    std::size_t height() const { return _height; }
+    const image_size& size() const { return _size; }
+    std::size_t width() const { return _size.width; }
+    std::size_t height() const { return _size.height; }
 
     Colour& at(std::size_t y, std::size_t x) { return _rows[y][x]; }
     const Colour& at(std::size_t y, std::size_t x) const { return _rows[y][x]; }
@@ -42,8 +48,7 @@ public:
     void invert_y() { std::ranges::reverse(_rows); }
 
 private:
-    std::size_t _width;
-    std::size_t _height;
+    image_size _size;
     std::shared_ptr<Colour[]> _pixels;
     std::vector<std::span<Colour>> _rows;
 

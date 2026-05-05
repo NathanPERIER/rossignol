@@ -160,7 +160,7 @@ rol::basic_image<Colour> read_pixels_no_alpha(read_structs_holder& holder, const
         rows.push_back(pixels.data() + row_bytes * y);
     }
     png_read_image(holder.png, rows.data());
-    rol::basic_image<Colour> res(width, height);
+    rol::basic_image<Colour> res(rol::image_size { .width = width, .height = height});
     for(std::size_t y = 0; y < height; y++) {
         std::span<uint8_t> source_row(rows[y], row_bytes);
         std::span<Colour> alpha_row = res[y];
@@ -179,7 +179,7 @@ rol::basic_image<Colour> read_pixels_with_alpha(read_structs_holder& holder, con
     assert(row_bytes % pixel_size == 0);
     const std::size_t width = row_bytes / pixel_size;
     // The structs are already in the correct order wo se can read directly to the buffer with a cast
-    rol::basic_image<Colour> res(width, height);
+    rol::basic_image<Colour> res(rol::image_size { .width = width, .height = height });
     std::vector<uint8_t*> rows;
     rows.reserve(height);
     for(std::size_t y = 0; y < height; y++) {
@@ -375,26 +375,26 @@ struct dump_image_impl {
 namespace rol {
 
 template <typename Colour>
-basic_image<Colour>::basic_image(std::size_t width, std::size_t height): _width(width), _height(height), _pixels(std::make_shared<Colour[]>(_width * _height)) {
-    _rows.reserve(height);
-    for(std::size_t y = 0; y < _height; y++) {
-        _rows.push_back(std::span<Colour>(_pixels.get() + _width * y, _width));
+basic_image<Colour>::basic_image(image_size size): _size(size), _pixels(std::make_shared<Colour[]>(_size.width * _size.height)) {
+    _rows.reserve(_size.height);
+    for(std::size_t y = 0; y < _size.height; y++) {
+        _rows.push_back(std::span<Colour>(_pixels.get() + _size.width * y, _size.width));
     }
 }
 
 template <typename Colour>
-basic_image<Colour>::basic_image(std::size_t width, std::size_t height, Colour fill): basic_image(width, height) {
+basic_image<Colour>::basic_image(image_size size, Colour fill): basic_image(width, height) {
     for(const std::span<Colour> row: _rows) {
         std::fill(row.begin(), row.end(), fill);
     }
 }
 
-template basic_image<bool>::basic_image(std::size_t width, std::size_t height);
+template basic_image<bool>::basic_image(image_size size);
 
 template <typename Colour>
 basic_image<Colour> basic_image<Colour>::clone() const {
-    basic_image<Colour> res(_width, _height);
-    for(std::size_t y = 0; y < _height; y++) {
+    basic_image<Colour> res(_size);
+    for(std::size_t y = 0; y < _size.height; y++) {
         std::copy(_rows[y].begin(), _rows[y].end(), res._rows[y].begin());
     }
     return res;
