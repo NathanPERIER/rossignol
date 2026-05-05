@@ -2,12 +2,13 @@
 #pragma once
 
 #include "rossignol/image/image.hh"
+#include "rossignol/utils/typing/functional.hh"
 
 
 namespace rol::detail {
 
 template <typename ColourOut, typename ColourIn, typename ColourMapper>
-// requires(...)
+requires(yield_invocable<ColourMapper, ColourOut, ColourIn>)
 basic_image<ColourOut> map_pixels(const basic_image<ColourIn>& img, const ColourMapper& transform) {
     basic_image<ColourOut> res(img.width(), img.height());
 
