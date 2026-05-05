@@ -3,6 +3,7 @@ rossignol_sources = [
     'colour/rgb.cc',
     'image/image.cc',
     'image/algorithm/binarise.cc',
+    'image/algorithm/coefficients.cc',
     'image/algorithm/extract_channel.cc',
     'image/algorithm/greyscale.cc',
     'image/algorithm/mirror.cc',
