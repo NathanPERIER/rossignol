@@ -110,6 +110,12 @@ public:
     rol::binary_image operator()(const rol::rgb_image&) {
         throw std::runtime_error("Unable to binarise an RGB image, convert it to greyscale first");
     }
+    rol::binary_image operator()(const rol::layer&) {
+        throw std::runtime_error("Unable to binarise an unnamed layer, convert it to greyscale first");
+    }
+    rol::binary_image operator()(const rol::coefficient_plane&) {
+        throw std::runtime_error("Unable to binarise a coefficient plane (maybe convert to greyscale ?)");
+    }
     rol::binary_image operator()(const rol::greyscale_image& img) {
         return std::visit(binarise_greyscale_impl(img), _method);
     }

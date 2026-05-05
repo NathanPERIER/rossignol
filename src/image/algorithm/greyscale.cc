@@ -24,6 +24,24 @@ greyscale_image greyscale(const binary_image& img) {
     });
 }
 
+greyscale_image greyscale(const layer& img) {
+    return map_pixels<greyscalea>(img, [](uint8_t pixel) {
+        return greyscalea {
+            .grey = pixel,
+            .a = 255
+        };
+    });
+}
+
+greyscale_image greyscale(const coefficient_plane& img) {
+    return map_pixels<greyscalea>(img, [](double pixel) {
+        return greyscalea {
+            .grey = static_cast<uint8_t>(pixel * 255.0),
+            .a = 255
+        };
+    });
+}
+
 } // namespace rol::detail
 
 
@@ -37,6 +55,12 @@ public:
         return img.share();
     }
     rol::greyscale_image operator()(const rol::binary_image& img) {
+        return rol::detail::greyscale(img);
+    }
+    rol::greyscale_image operator()(const rol::layer& img) {
+        return rol::detail::greyscale(img);
+    }
+    rol::greyscale_image operator()(const rol::coefficient_plane& img) {
         return rol::detail::greyscale(img);
     }
     rol::greyscale_image operator()(const rol::rgb_image& img) {

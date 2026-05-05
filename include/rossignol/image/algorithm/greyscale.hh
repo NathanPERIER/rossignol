@@ -19,6 +19,10 @@ greyscale_image greyscale(const rgb_image& img);
 
 greyscale_image greyscale(const binary_image& img);
 
+greyscale_image greyscale(const layer& img);
+
+greyscale_image greyscale(const coefficient_plane& img);
+
 } // namespace rol::detail
 
 

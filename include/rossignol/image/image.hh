@@ -52,8 +52,10 @@ private:
 using rgb_image = basic_image<rgba>;
 using greyscale_image = basic_image<greyscalea>;
 using binary_image = basic_image<bool>;
+using layer = basic_image<uint8_t>;
+using coefficient_plane = basic_image<double>;
 
-using image = std::variant<rgb_image, greyscale_image, binary_image>;
+using image = std::variant<rgb_image, greyscale_image, binary_image, layer, coefficient_plane>;
 
 
 image parse_image(std::span<const uint8_t> raw);
