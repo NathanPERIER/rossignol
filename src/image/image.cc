@@ -382,6 +382,13 @@ basic_image<Colour>::basic_image(std::size_t width, std::size_t height): _width(
     }
 }
 
+template <typename Colour>
+basic_image<Colour>::basic_image(std::size_t width, std::size_t height, Colour fill): basic_image(width, height) {
+    for(const std::span<Colour> row: _rows) {
+        std::fill(row.begin(), row.end(), fill);
+    }
+}
+
 template basic_image<bool>::basic_image(std::size_t width, std::size_t height);
 
 template <typename Colour>

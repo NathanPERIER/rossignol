@@ -18,6 +18,9 @@ class basic_image {
 public:
     basic_image(std::size_t width, std::size_t height);
 
+    /// @brief creates a plain image filled with a given colour
+    basic_image(std::size_t width, std::size_t height, Colour fill);
+
     basic_image(basic_image<Colour>&&) = default;
     basic_image<Colour>& operator=(basic_image<Colour>&&) = default;
 
