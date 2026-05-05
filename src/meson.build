@@ -4,6 +4,7 @@ rossignol_sources = [
     'image/image.cc',
     'image/algorithm/binarise.cc',
     'image/algorithm/greyscale.cc',
+    'image/algorithm/mirror.cc',
     'utils/io/file.cc'
 ]
 

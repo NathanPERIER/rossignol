@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <span>
 #include <variant>
@@ -34,6 +35,8 @@ public:
 
     std::span<Colour> operator[](std::size_t y) { return _rows[y]; }
     std::span<const Colour> operator[](std::size_t y) const { return _rows[y]; }
+
+    void invert_y() { std::ranges::reverse(_rows); }
 
 private:
     std::size_t _width;
