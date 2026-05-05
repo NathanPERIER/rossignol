@@ -29,11 +29,15 @@ layer extract_channel(const greyscale_image& img);
 
 layer extract_channel(const binary_image& img);
 
+layer to_channel(const coefficient_plane& img);
+
 } // namespace rol::detail
 
 
 namespace rol {
 
 layer extract_channel(const image& img, layer_name layr);
+
+layer to_channel(const image& img);
 
 } // namespace rol

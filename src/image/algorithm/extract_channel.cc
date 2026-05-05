@@ -55,6 +55,15 @@ layer extract_channel(const binary_image& img) {
     return rol::detail::map_pixels<uint8_t>(img, [](const bool pixel) { return static_cast<uint8_t>(pixel ? 255 : 0); });
 }
 
+
+/*--------------------+
+|  Coefficients       |
++--------------------*/
+
+layer to_channel(const coefficient_plane& img) {
+    return rol::detail::map_pixels<uint8_t>(img, [](const double& pixel) { return static_cast<uint8_t>(pixel * 255.0); });
+}
+
 } // namespace rol::detail
 
 
@@ -102,11 +111,35 @@ public:
     }
 
     rol::layer operator()(const rol::coefficient_plane&) {
-        throw std::runtime_error("Unable to extract layer from coefficient plane");
+        throw std::runtime_error("Unable to extract layer from coefficient plane (use direct conversion instead)");
     }
 
 private:
     rol::layer_name _layer;
+};
+
+
+struct to_channel_impl {
+
+    rol::layer operator()(const rol::rgb_image&) {
+        throw std::runtime_error("Unable to convert an RGB image directly to an unnamed layer (use extraction instead)");
+    }
+
+    rol::layer operator()(const rol::greyscale_image&) {
+        throw std::runtime_error("Unable to convert a greyscale image directly to an unnamed layer (use extraction instead)");
+    }
+
+    rol::layer operator()(const rol::binary_image&) {
+        throw std::runtime_error("Unable to convert a binary image directly to an unnamed layer (use extraction instead)");
+    }
+
+    rol::layer operator()(const rol::layer& img) {
+        return img.share();
+    }
+
+    rol::layer operator()(const rol::coefficient_plane& img) {
+        return rol::detail::to_channel(img);
+    }
 };
 
 } // anonymous namespace
@@ -116,6 +149,10 @@ namespace rol {
 
 layer extract_channel(const image& img, layer_name layr) {
     return std::visit(extract_channel_impl(layr), img);
+}
+
+layer to_channel(const image& img) {
+    return std::visit(to_channel_impl{}, img);
 }
 
 } // namespace rol
