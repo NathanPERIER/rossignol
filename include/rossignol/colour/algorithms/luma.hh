@@ -2,15 +2,10 @@
 #pragma once
 
 #include "rossignol/colour/algorithms/combine_channels.hh"
+#include "rossignol/params/luma_method.hh"
 
 
 namespace rol {
-
-enum class luma_method {
-    sdtv,
-    hdtv,
-    hdr
-};
 
 template <luma_method Luma>
 uint8_t luma(const rgba& col) {

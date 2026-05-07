@@ -4,7 +4,7 @@
 #include "rossignol/image/image.hh"
 
 
-namespace rol::detail {
+namespace rol::algo {
 
 template <typename Colour>
 basic_image<Colour> vertical_mirror(const basic_image<Colour>& img) {
@@ -22,16 +22,4 @@ basic_image<Colour> horizontal_mirror(const basic_image<Colour>& img) {
     return res;
 }
 
-} // namespace rol::detail
-
-
-namespace rol {
-
-enum class mirror_direction {
-    horizontal,
-    vertical
-};
-
-image mirror(const image& img, mirror_direction direction);
-
-} // namespace rol
+} // namespace rol::algo
