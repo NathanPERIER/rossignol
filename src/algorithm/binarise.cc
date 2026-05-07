@@ -1,4 +1,4 @@
-#include "rossignol/image/algorithm/binarise.hh"
+#include "rossignol/algorithm/binarise.hh"
 
 #include "image/algorithm/pixel_mapper.hh"
 
@@ -25,7 +25,7 @@ int16_t fs_diff(uint8_t grey, bool bw) {
 } // anonymous namespace
 
 
-namespace rol::detail {
+namespace rol::algo {
 
 binary_image floyd_steinberg(const greyscale_image& img) {
     binary_image res(img.size());
@@ -75,62 +75,9 @@ binary_image floyd_steinberg(const greyscale_image& img) {
 }
 
 binary_image binarise_threshold(const greyscale_image& img, uint8_t threshold) {
-    return map_pixels<bool>(img, [&threshold](const greyscalea& pixel) {
+    return rol::detail::map_pixels<bool>(img, [&threshold](const greyscalea& pixel) {
         return (pixel.grey > threshold);
     });
 }
 
-} // namespace rol::detail
-
-
-namespace {
-
-class binarise_greyscale_impl {
-public:
-    binarise_greyscale_impl(const rol::greyscale_image& img): _img(img) {}
-
-    rol::binary_image operator()(rol::floyd_steinberg_t) {
-        return rol::detail::floyd_steinberg(_img);
-    }
-    rol::binary_image operator()(const rol::binary_threshold& threshold) {
-        return rol::detail::binarise_threshold(_img, threshold.value);
-    }
-
-private:
-    const rol::greyscale_image& _img;
-};
-
-class binarise_general_impl {
-public:
-    binarise_general_impl(const rol::binarise_method& method): _method(method) {}
-
-    rol::binary_image operator()(const rol::binary_image& img) {
-        return img.share();
-    }
-    rol::binary_image operator()(const rol::rgb_image&) {
-        throw std::runtime_error("Unable to binarise an RGB image, convert it to greyscale first");
-    }
-    rol::binary_image operator()(const rol::layer&) {
-        throw std::runtime_error("Unable to binarise an unnamed layer, convert it to greyscale first");
-    }
-    rol::binary_image operator()(const rol::coefficient_plane&) {
-        throw std::runtime_error("Unable to binarise a coefficient plane (maybe convert to greyscale ?)");
-    }
-    rol::binary_image operator()(const rol::greyscale_image& img) {
-        return std::visit(binarise_greyscale_impl(img), _method);
-    }
-
-private:
-    const rol::binarise_method& _method;
-};
-
-} // anonymous namespace
-
-
-namespace rol {
-
-binary_image binarise(const image& img, binarise_method method) {
-    return std::visit(::binarise_general_impl(method), img);
-}
-
-} // namespace rol
+} // namespace rol::algo

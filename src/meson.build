@@ -1,8 +1,9 @@
 
 rossignol_sources = [
+    'algorithm/binarise.cc',
     'colour/rgb.cc',
+    'generic/binarise.cc',
     'image/image.cc',
-    'image/algorithm/binarise.cc',
     'image/algorithm/coefficients.cc',
     'image/algorithm/extract_channel.cc',
     'image/algorithm/greyscale.cc',
