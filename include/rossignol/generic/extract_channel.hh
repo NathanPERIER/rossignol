@@ -19,6 +19,9 @@ public:
 
 private:
     layer_name _layer;
+
+    layer operator()(const layer&) const;
+    layer operator()(const coefficient_plane&) const;
 };
 
 
@@ -30,6 +33,11 @@ public:
     layer operator()(const coefficient_plane& img) const;
 
     layer operator()(const image& img) const;
+
+private:
+    layer operator()(const rgb_image&) const;
+    layer operator()(const greyscale_image&) const;
+    layer operator()(const binary_image&) const;
 };
 
 } // namespace rol::generic

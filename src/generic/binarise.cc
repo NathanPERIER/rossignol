@@ -20,34 +20,14 @@ private:
     const rol::greyscale_image& _img;
 };
 
-class binarise_general_impl {
-public:
-    binarise_general_impl(const rol::generic::binarise& op): _op(op) {}
-
-    rol::binary_image operator()(const rol::binary_image& img) {
-        return _op(img);
-    }
-    rol::binary_image operator()(const rol::rgb_image&) {
-        throw std::runtime_error("Unable to binarise an RGB image, convert it to greyscale first");
-    }
-    rol::binary_image operator()(const rol::layer&) {
-        throw std::runtime_error("Unable to binarise an unnamed layer, convert it to greyscale first");
-    }
-    rol::binary_image operator()(const rol::coefficient_plane&) {
-        throw std::runtime_error("Unable to binarise a coefficient plane (maybe convert to greyscale ?)");
-    }
-    rol::binary_image operator()(const rol::greyscale_image& img) {
-        return _op(img);
-    }
-
-private:
-    const rol::generic::binarise& _op;
-};
-
 } // anonymous namespace
 
 
 namespace rol::generic {
+
+binary_image binarise::operator()(const rgb_image&) const {
+    throw std::runtime_error("Unable to binarise an RGB image, convert it to greyscale first");
+}
 
 binary_image binarise::operator()(const greyscale_image& img) const {
     return std::visit(::binarise_greyscale_impl(img), _method);
@@ -57,8 +37,16 @@ binary_image binarise::operator()(const binary_image& img) const {
     return img.share();
 }
 
+binary_image binarise::operator()(const layer&) const {
+    throw std::runtime_error("Unable to binarise an unnamed layer, convert it to greyscale first");
+}
+
+binary_image binarise::operator()(const coefficient_plane&) const {
+    throw std::runtime_error("Unable to binarise a coefficient plane (maybe convert to greyscale ?)");
+}
+
 binary_image binarise::operator()(const image& img) const {
-    return std::visit(::binarise_general_impl(*this), img);
+    return std::visit([this](const auto& img) -> binary_image { return operator()(img); }, img);
 }
 
 } // namespace rol::generic

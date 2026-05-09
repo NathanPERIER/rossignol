@@ -27,6 +27,10 @@ public:
 
 private:
     binarise_method _method;
+
+    binary_image operator()(const rgb_image&) const;
+    binary_image operator()(const layer&) const;
+    binary_image operator()(const coefficient_plane&) const;
 };
 
 } // namespace rol::generic
