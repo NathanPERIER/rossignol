@@ -383,13 +383,15 @@ basic_image<Colour>::basic_image(image_size size): _size(size), _pixels(std::mak
 }
 
 template <typename Colour>
-basic_image<Colour>::basic_image(image_size size, Colour fill): basic_image(width, height) {
+basic_image<Colour>::basic_image(image_size size, Colour fill): basic_image(size) {
     for(const std::span<Colour> row: _rows) {
         std::fill(row.begin(), row.end(), fill);
     }
 }
 
-template basic_image<bool>::basic_image(image_size size);
+template basic_image<bool>::basic_image(image_size size, bool fill);
+template basic_image<uint8_t>::basic_image(image_size size, uint8_t fill);
+template basic_image<double>::basic_image(image_size size, double fill);
 
 template <typename Colour>
 basic_image<Colour> basic_image<Colour>::clone() const {
