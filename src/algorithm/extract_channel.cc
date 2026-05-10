@@ -1,6 +1,6 @@
 #include "rossignol/algorithm/extract_channel.hh"
 
-#include "image/algorithm/pixel_mapper.hh"
+#include "rossignol/algorithm/map_pixels.hh"
 
 
 namespace rol::algo {
@@ -11,22 +11,22 @@ namespace rol::algo {
 
 template<>
 layer extract_channel<layer_name::red>(const rgb_image& img) {
-    return rol::detail::map_pixels<uint8_t>(img, [](const rol::rgba& pixel) { return pixel.r; });
+    return map_pixels<uint8_t>(img, [](const rol::rgba& pixel) { return pixel.r; });
 }
 
 template<>
 layer extract_channel<layer_name::green>(const rgb_image& img) {
-    return rol::detail::map_pixels<uint8_t>(img, [](const rol::rgba& pixel) { return pixel.g; });
+    return map_pixels<uint8_t>(img, [](const rol::rgba& pixel) { return pixel.g; });
 }
 
 template<>
 layer extract_channel<layer_name::blue>(const rgb_image& img) {
-    return rol::detail::map_pixels<uint8_t>(img, [](const rol::rgba& pixel) { return pixel.b; });
+    return map_pixels<uint8_t>(img, [](const rol::rgba& pixel) { return pixel.b; });
 }
 
 template<>
 layer extract_channel<layer_name::alpha>(const rgb_image& img) {
-    return rol::detail::map_pixels<uint8_t>(img, [](const rol::rgba& pixel) { return pixel.a; });
+    return map_pixels<uint8_t>(img, [](const rol::rgba& pixel) { return pixel.a; });
 }
 
 
@@ -36,12 +36,12 @@ layer extract_channel<layer_name::alpha>(const rgb_image& img) {
 
 template<>
 layer extract_channel<layer_name::grey>(const greyscale_image& img) {
-    return rol::detail::map_pixels<uint8_t>(img, [](const rol::greyscalea& pixel) { return pixel.grey; });
+    return map_pixels<uint8_t>(img, [](const rol::greyscalea& pixel) { return pixel.grey; });
 }
 
 template<>
 layer extract_channel<layer_name::alpha>(const greyscale_image& img) {
-    return rol::detail::map_pixels<uint8_t>(img, [](const rol::greyscalea& pixel) { return pixel.a; });
+    return map_pixels<uint8_t>(img, [](const rol::greyscalea& pixel) { return pixel.a; });
 }
 
 
@@ -50,7 +50,7 @@ layer extract_channel<layer_name::alpha>(const greyscale_image& img) {
 +--------------------*/
 
 layer extract_channel(const binary_image& img) {
-    return rol::detail::map_pixels<uint8_t>(img, [](const bool pixel) { return static_cast<uint8_t>(pixel ? 255 : 0); });
+    return map_pixels<uint8_t>(img, [](const bool pixel) { return static_cast<uint8_t>(pixel ? 255 : 0); });
 }
 
 
@@ -59,7 +59,7 @@ layer extract_channel(const binary_image& img) {
 +--------------------*/
 
 layer to_channel(const coefficient_plane& img) {
-    return rol::detail::map_pixels<uint8_t>(img, [](const double& pixel) { return static_cast<uint8_t>(pixel * 255.0); });
+    return map_pixels<uint8_t>(img, [](const double& pixel) { return static_cast<uint8_t>(pixel * 255.0); });
 }
 
 } // namespace rol::algo

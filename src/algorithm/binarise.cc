@@ -1,6 +1,6 @@
 #include "rossignol/algorithm/binarise.hh"
 
-#include "image/algorithm/pixel_mapper.hh"
+#include "rossignol/algorithm/map_pixels.hh"
 
 
 namespace {
@@ -75,7 +75,7 @@ binary_image floyd_steinberg(const greyscale_image& img) {
 }
 
 binary_image binarise_threshold(const greyscale_image& img, uint8_t threshold) {
-    return rol::detail::map_pixels<bool>(img, [&threshold](const greyscalea& pixel) {
+    return map_pixels<bool>(img, [&threshold](const greyscalea& pixel) {
         return (pixel.grey > threshold);
     });
 }

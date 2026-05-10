@@ -5,7 +5,7 @@
 #include "rossignol/utils/typing/functional.hh"
 
 
-namespace rol::detail {
+namespace rol::algo {
 
 template <typename ColourOut, typename ColourIn, typename ColourMapper>
 requires(yield_invocable<ColourMapper, ColourOut, ColourIn>)
@@ -23,4 +23,4 @@ basic_image<ColourOut> map_pixels(const basic_image<ColourIn>& img, const Colour
     return res;
 }
 
-} // namespace rol::detail
+} // namespace rol::algo
