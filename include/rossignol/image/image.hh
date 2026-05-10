@@ -69,5 +69,7 @@ using image = std::variant<rgb_image, greyscale_image, binary_image, layer, coef
 image parse_image(std::span<const uint8_t> raw);
 
 std::vector<uint8_t> dump_image(image& img);
+std::vector<uint8_t> dump_image(rol::rgb_image& img);
+std::vector<uint8_t> dump_image(rol::greyscale_image& img);
 
 } // namespace rol

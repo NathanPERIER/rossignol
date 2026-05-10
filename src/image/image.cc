@@ -321,50 +321,56 @@ void print_info(read_structs_holder& holder) {
 }
 
 
-struct dump_image_impl {
+template <int PngColourType, typename Colour>
+std::vector<uint8_t> dump_image_impl(rol::basic_image<Colour>& img) {
+    ::write_structs_holder holder = ::write_structs_holder::make();
 
-    template <typename Colour>
-    std::vector<uint8_t> operator()(rol::basic_image<Colour>& img) {
-        int colour_type;
-        if constexpr (std::same_as<Colour, rol::rgba>) {
-            colour_type = PNG_COLOR_TYPE_RGBA;
-        } else if constexpr (std::same_as<Colour, rol::greyscalea>) {
-            colour_type = PNG_COLOR_TYPE_GRAY_ALPHA;
-        } else {
-            throw std::runtime_error("Unsupported image format for writing");
-        }
+    png_set_IHDR(
+        holder.png,
+        holder.info,
+        img.width(),
+        img.height(),
+        8,
+        PngColourType,
+        PNG_INTERLACE_NONE,
+        PNG_COMPRESSION_TYPE_DEFAULT,
+        PNG_FILTER_TYPE_DEFAULT
+    );
 
-        ::write_structs_holder holder = ::write_structs_holder::make();
+    // const size_t row_bytes = png_get_rowbytes(holder.png, holder.info);
+    // assert(row_bytes == (_width * sizeof(npp::rgba)));
 
-        png_set_IHDR(
-            holder.png,
-            holder.info,
-            img.width(),
-            img.height(),
-            8,
-            colour_type,
-            PNG_INTERLACE_NONE,
-            PNG_COMPRESSION_TYPE_DEFAULT,
-            PNG_FILTER_TYPE_DEFAULT
-        );
+    std::vector<png_byte*> row_pointers;
+    row_pointers.reserve(img.height());
+    for(size_t y = 0; y < img.height(); y++) {
+        row_pointers.push_back(reinterpret_cast<png_byte*>(img[y].data()));
+    }
 
-        // const size_t row_bytes = png_get_rowbytes(holder.png, holder.info);
-        // assert(row_bytes == (_width * sizeof(npp::rgba)));
+    std::vector<uint8_t> res;
+    png_set_write_fn(holder.png, &res, write_data_callback, flush_data_callback);
 
-        std::vector<png_byte*> row_pointers;
-        row_pointers.reserve(img.height());
-        for(size_t y = 0; y < img.height(); y++) {
-            row_pointers.push_back(reinterpret_cast<png_byte*>(img[y].data()));
-        }
+    png_write_info(holder.png, holder.info);
+    png_write_image(holder.png, row_pointers.data()); // Warning: systematic copy here
+    png_write_end(holder.png, nullptr);
 
-        std::vector<uint8_t> res;
-        png_set_write_fn(holder.png, &res, write_data_callback, flush_data_callback);
+    return res;
+}
 
-        png_write_info(holder.png, holder.info);
-        png_write_image(holder.png, row_pointers.data()); // Warning: systematic copy here
-        png_write_end(holder.png, nullptr);
-
-        return res;
+struct dump_generic_image_impl {
+    std::vector<uint8_t> operator()(rol::rgb_image& img) {
+        return rol::dump_image(img);
+    }
+    std::vector<uint8_t> operator()(rol::greyscale_image& img) {
+        return rol::dump_image(img);
+    }
+    std::vector<uint8_t> operator()(rol::binary_image&) {
+        throw std::runtime_error("Cannot dump a binary image to PNG (maybe convert to greyscale ?)");
+    }
+    std::vector<uint8_t> operator()(rol::layer&) {
+        throw std::runtime_error("Cannot dump an unnamed layer to PNG (maybe convert to greyscale ?)");
+    }
+    std::vector<uint8_t> operator()(rol::coefficient_plane&) {
+        throw std::runtime_error("Cannot dump a coefficient plane to PNG (maybe convert to greyscale ?)");
     }
 };
 
@@ -428,8 +434,16 @@ image parse_image(std::span<const uint8_t> raw) {
     return res;
 }
 
+std::vector<uint8_t> dump_image(rol::rgb_image& img) {
+    return ::dump_image_impl<PNG_COLOR_TYPE_RGBA>(img);
+}
+
+std::vector<uint8_t> dump_image(rol::greyscale_image& img) {
+    return ::dump_image_impl<PNG_COLOR_TYPE_GRAY_ALPHA>(img);
+}
+
 std::vector<uint8_t> dump_image(image& img) {
-    return std::visit(::dump_image_impl{}, img);
+    return std::visit(::dump_generic_image_impl{}, img);
 }
 
 } // namespace rol
