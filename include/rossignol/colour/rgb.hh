@@ -15,18 +15,6 @@ struct rgba {
     uint8_t b;
     uint8_t a = 255;
 
-    double hue() const;
-    double chroma() const;
-    double hsl_saturation() const;
-    double hsv_saturation() const;
-    double hsi_saturation() const;
-    uint8_t lightness() const;
-    uint8_t value() const;
-    uint8_t intensity() const;
-    double lightness_coeff() const;
-    double value_coeff() const;
-    double intensity_coeff() const;
-
     bool operator==(const rgba& col) const = default;
 };
 

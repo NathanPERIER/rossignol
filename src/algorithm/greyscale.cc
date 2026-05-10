@@ -1,6 +1,6 @@
 #include "rossignol/algorithm/greyscale.hh"
 
-#include "rossignol/colour/algorithms/luma.hh"
+#include "rossignol/colour/conv.hh"
 
 #include "image/algorithm/pixel_mapper.hh"
 
