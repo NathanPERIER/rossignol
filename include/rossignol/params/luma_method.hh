@@ -15,6 +15,6 @@ enum class luma_method {
 
 namespace rol::defaults {
 
-constexpr luma_method greyscale_method = luma_method::sdtv;
+constexpr rol::luma_method luma_method = rol::luma_method::sdtv;
 
 } // namespace rol::defaults

@@ -7,8 +7,15 @@
 
 namespace rol::algo {
 
-template <luma_method Method = defaults::greyscale_method>
-greyscale_image greyscale(const rgb_image& img);
+template <luma_method Method = defaults::luma_method>
+greyscale_image greyscale_luma(const rgb_image& img);
+
+greyscale_image greyscale_intensity(const rgb_image& img);
+
+greyscale_image greyscale_lightness(const rgb_image& img);
+
+greyscale_image greyscale_value(const rgb_image& img);
+
 
 greyscale_image greyscale(const binary_image& img);
 

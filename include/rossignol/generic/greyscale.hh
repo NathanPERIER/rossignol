@@ -2,14 +2,14 @@
 #pragma once
 
 #include "rossignol/image/image.hh"
-#include "rossignol/params/luma_method.hh"
+#include "rossignol/params/generic/greyscale_method.hh"
 
 
 namespace rol::generic {
 
 class to_greyscale {
 public:
-    to_greyscale(luma_method method = defaults::greyscale_method): _method(method) {}
+    to_greyscale(greyscale_method method = defaults::greyscale_method ): _method(method) {}
 
     greyscale_image operator()(const rgb_image& img) const;
     greyscale_image operator()(const greyscale_image& img) const { return img.share(); }
@@ -20,7 +20,7 @@ public:
     greyscale_image operator()(const image& img) const;
 
 private:
-    luma_method _method;
+    greyscale_method _method;
 };
 
 } // namespace rol::generic
