@@ -86,4 +86,8 @@ template <typename DestColour>
 requires(any_of<DestColour, hsi, hsl, hsv>)
 DestColour colour_conv(const rgba& col);
 
+template <typename DestColour>
+requires(any_of<DestColour, rgba>)
+DestColour colour_conv(const greyscalea& col);
+
 } // namespace rol

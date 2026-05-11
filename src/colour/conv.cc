@@ -143,4 +143,14 @@ hsv colour_conv<hsv>(const rgba& col) {
     };
 }
 
+template <>
+rgba colour_conv<rgba>(const greyscalea& col) {
+    return rgba {
+        .r = col.grey,
+        .g = col.grey,
+        .b = col.grey,
+        .a = col.a
+    };
+}
+
 } // namespace rol
