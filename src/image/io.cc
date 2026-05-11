@@ -1,4 +1,4 @@
-#include "rossignol/image/image.hh"
+#include "rossignol/image/io.hh"
 
 // TODO precondition macro
 #include <cassert>
@@ -380,34 +380,6 @@ struct dump_generic_image_impl {
 
 namespace rol {
 
-template <typename Colour>
-basic_image<Colour>::basic_image(image_size size): _size(size), _pixels(std::make_shared<Colour[]>(_size.width * _size.height)) {
-    _rows.reserve(_size.height);
-    for(std::size_t y = 0; y < _size.height; y++) {
-        _rows.push_back(std::span<Colour>(_pixels.get() + _size.width * y, _size.width));
-    }
-}
-
-template <typename Colour>
-basic_image<Colour>::basic_image(image_size size, Colour fill): basic_image(size) {
-    for(const std::span<Colour> row: _rows) {
-        std::fill(row.begin(), row.end(), fill);
-    }
-}
-
-template basic_image<bool>::basic_image(image_size size, bool fill);
-template basic_image<uint8_t>::basic_image(image_size size, uint8_t fill);
-template basic_image<double>::basic_image(image_size size, double fill);
-
-template <typename Colour>
-basic_image<Colour> basic_image<Colour>::clone() const {
-    basic_image<Colour> res(_size);
-    for(std::size_t y = 0; y < _size.height; y++) {
-        std::copy(_rows[y].begin(), _rows[y].end(), res._rows[y].begin());
-    }
-    return res;
-}
-
 image parse_image(std::span<const uint8_t> raw) {
     static constexpr std::size_t sig_size = 8;
     if(raw.size() < sig_size || png_sig_cmp(raw.data(), 0, sig_size) != 0) {
@@ -433,6 +405,7 @@ image parse_image(std::span<const uint8_t> raw) {
 
     return res;
 }
+
 
 std::vector<uint8_t> dump_image(rol::rgb_image& img) {
     return ::dump_image_impl<PNG_COLOR_TYPE_RGBA>(img);

@@ -30,6 +30,7 @@ The low-level API is a collection of algorithms defined in the `rol::algo` names
 #include <rossignol/algorithm/greyscale.hh>
 
 // For reading and writing files
+#include <rossignol/image/io.hh>
 #include <rossignol/utils/io/file.hh>
 
 
@@ -81,6 +82,7 @@ The high-level API encapsulates the low-level APIs in functor objects that can r
 #include <rossignol/generic/pipeline.hh>
 
 // For reading and writing files
+#include <rossignol/image/io.hh>
 #include <rossignol/utils/io/file.hh>
 
 

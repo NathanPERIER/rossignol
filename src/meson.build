@@ -12,7 +12,7 @@ rossignol_sources = [
     'generic/greyscale.cc',
     'generic/mirror.cc',
     'generic/rgb.cc',
-    'image/image.cc',
+    'image/io.cc',
     'utils/io/file.cc'
 ]
 

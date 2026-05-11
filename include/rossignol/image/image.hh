@@ -21,10 +21,19 @@ struct image_size {
 template <typename Colour>
 class basic_image {
 public:
-    basic_image(image_size size);
+    basic_image(image_size size): _size(size), _pixels(std::make_shared<Colour[]>(_size.width * _size.height)) {
+        _rows.reserve(_size.height);
+        for(std::size_t y = 0; y < _size.height; y++) {
+            _rows.push_back(std::span<Colour>(_pixels.get() + _size.width * y, _size.width));
+        }
+    }
 
     /// @brief creates a plain image filled with a given colour
-    basic_image(image_size size, Colour fill);
+    basic_image(image_size size, Colour fill): basic_image(size) {
+        for(const std::span<Colour> row: _rows) {
+            std::fill(row.begin(), row.end(), fill);
+        }
+    }
 
     basic_image(basic_image<Colour>&&) = default;
     basic_image<Colour>& operator=(basic_image<Colour>&&) = default;
@@ -33,7 +42,13 @@ public:
     basic_image<Colour> share() const { return basic_image<Colour>(*this); }
 
     /// @brief creates copy of the current image
-    basic_image<Colour> clone() const;
+    basic_image<Colour> clone() const {
+        basic_image<Colour> res(_size);
+        for(std::size_t y = 0; y < _size.height; y++) {
+            std::copy(_rows[y].begin(), _rows[y].end(), res._rows[y].begin());
+        }
+        return res;
+    }
 
     const image_size& size() const { return _size; }
     std::size_t width() const { return _size.width; }
@@ -64,12 +79,5 @@ using layer = basic_image<uint8_t>;
 using coefficient_plane = basic_image<double>;
 
 using image = std::variant<rgb_image, greyscale_image, binary_image, layer, coefficient_plane>;
-
-
-image parse_image(std::span<const uint8_t> raw);
-
-std::vector<uint8_t> dump_image(image& img);
-std::vector<uint8_t> dump_image(rol::rgb_image& img);
-std::vector<uint8_t> dump_image(rol::greyscale_image& img);
 
 } // namespace rol
