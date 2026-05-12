@@ -1,4 +1,4 @@
-#include "rossignol/colour/conv.hh"
+#include "rossignol/colour/conv/cylindrical.hh"
 
 #include <algorithm>
 #include <cmath>
@@ -140,16 +140,6 @@ hsv colour_conv<hsv>(const rgba& col) {
         .h = ::compute_hue(col, minmax, chroma),
         .s = ::compute_hsv_saturation(minmax, chroma),
         .v = static_cast<double>(minmax.max) / 255.0
-    };
-}
-
-template <>
-rgba colour_conv<rgba>(const greyscalea& col) {
-    return rgba {
-        .r = col.grey,
-        .g = col.grey,
-        .b = col.grey,
-        .a = col.a
     };
 }
 

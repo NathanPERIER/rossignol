@@ -1,7 +1,7 @@
 #include "rossignol/algorithm/rgb.hh"
 
 #include "rossignol/algorithm/map_pixels.hh"
-#include "rossignol/colour/conv.hh"
+#include "rossignol/colour/conv/greyscale.hh"
 
 
 namespace rol::algo {
