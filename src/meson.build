@@ -5,6 +5,7 @@ rossignol_sources = [
     'algorithm/extract_channel.cc',
     'algorithm/greyscale.cc',
     'algorithm/rgb.cc',
+    'colour/generic.cc',
     'colour/conv/cylindrical.cc',
     'generic/binarise.cc',
     'generic/coefficients.cc',
