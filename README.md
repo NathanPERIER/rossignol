@@ -102,3 +102,8 @@ int main() {
     return 0;
 }
 ```
+
+## Acknowledgements
+
+- Colourmaps come from GNU Octave, MATLAB, Matplotlib and Google
+- Initial implementation of colourmaps was inspired by OpenCV
