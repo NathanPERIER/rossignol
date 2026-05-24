@@ -13,6 +13,7 @@ rossignol_sources = [
     'generic/coefficients.cc',
     'generic/colourmap.cc',
     'generic/extract_channel.cc',
+    'generic/fill.cc',
     'generic/greyscale.cc',
     'generic/invert.cc',
     'generic/mirror.cc',
