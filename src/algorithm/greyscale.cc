@@ -3,6 +3,7 @@
 #include "rossignol/algorithm/map_pixels.hh"
 #include "rossignol/colour/conv/cylindrical.hh"
 #include "rossignol/colour/conv/greyscale.hh"
+#include "rossignol/colour/conv/numeric.hh"
 
 
 namespace rol::algo {
@@ -52,28 +53,19 @@ greyscale_image greyscale_value(const rgb_image& img) {
 
 greyscale_image greyscale(const binary_image& img) {
     return map_pixels<greyscalea>(img, [](bool pixel) {
-        return greyscalea {
-            .grey = static_cast<uint8_t>(pixel ? 255 : 0),
-            .a = 255
-        };
+        return colour_conv<greyscalea>(pixel);
     });
 }
 
 greyscale_image greyscale(const layer& img) {
     return map_pixels<greyscalea>(img, [](uint8_t pixel) {
-        return greyscalea {
-            .grey = pixel,
-            .a = 255
-        };
+        return colour_conv<greyscalea>(pixel);
     });
 }
 
 greyscale_image greyscale(const coefficient_plane& img) {
     return map_pixels<greyscalea>(img, [](double pixel) {
-        return greyscalea {
-            .grey = static_cast<uint8_t>(pixel * 255.0),
-            .a = 255
-        };
+        return colour_conv<greyscalea>(pixel);
     });
 }
 

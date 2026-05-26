@@ -1,6 +1,7 @@
 #include "rossignol/algorithm/extract_channel.hh"
 
 #include "rossignol/algorithm/map_pixels.hh"
+#include "rossignol/colour/conv/numeric.hh"
 
 
 namespace rol::algo {
@@ -50,7 +51,7 @@ layer extract_channel<layer_name::alpha>(const greyscale_image& img) {
 +--------------------*/
 
 layer extract_channel(const binary_image& img) {
-    return map_pixels<uint8_t>(img, [](const bool pixel) { return static_cast<uint8_t>(pixel ? 255 : 0); });
+    return map_pixels<uint8_t>(img, [](const bool pixel) { return colour_conv<uint8_t>(pixel); });
 }
 
 
@@ -59,7 +60,7 @@ layer extract_channel(const binary_image& img) {
 +--------------------*/
 
 layer to_channel(const coefficient_plane& img) {
-    return map_pixels<uint8_t>(img, [](const double& pixel) { return static_cast<uint8_t>(pixel * 255.0); });
+    return map_pixels<uint8_t>(img, [](const double& pixel) { return colour_conv<uint8_t>(pixel); });
 }
 
 } // namespace rol::algo
