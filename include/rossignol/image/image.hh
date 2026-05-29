@@ -9,27 +9,23 @@
 
 #include "rossignol/colour/rgb.hh"
 #include "rossignol/colour/greyscale.hh"
+#include "rossignol/math/vec2.hh"
 
 
 namespace rol {
 
-struct image_size {
-    std::size_t width;
-    std::size_t height;
-};
-
 template <typename Colour>
 class basic_image {
 public:
-    basic_image(image_size size): _size(size), _pixels(std::make_shared<Colour[]>(_size.width * _size.height)), _rows(std::make_shared<std::vector<std::span<Colour>>>()) {
-        _rows->reserve(_size.height);
-        for(std::size_t y = 0; y < _size.height; y++) {
-            _rows->push_back(std::span<Colour>(_pixels.get() + _size.width * y, _size.width));
+    basic_image(math::vec2u size): _size(size), _pixels(std::make_shared<Colour[]>(_size.x * _size.y)), _rows(std::make_shared<std::vector<std::span<Colour>>>()) {
+        _rows->reserve(_size.y);
+        for(std::size_t y = 0; y < _size.y; y++) {
+            _rows->push_back(std::span<Colour>(_pixels.get() + _size.x * y, _size.x));
         }
     }
 
     /// @brief creates a plain image filled with a given colour
-    basic_image(image_size size, Colour fill): basic_image(size) {
+    basic_image(math::vec2u size, Colour fill): basic_image(size) {
         for(const std::span<Colour> row: *_rows) {
             std::fill(row.begin(), row.end(), fill);
         }
@@ -44,16 +40,16 @@ public:
     /// @brief creates copy of the current image
     basic_image<Colour> clone() const {
         basic_image<Colour> res(_size);
-        for(std::size_t y = 0; y < _size.height; y++) {
+        for(std::size_t y = 0; y < _size.y; y++) {
             const std::span<const Colour> row = (*_rows)[y];
             std::copy(row.begin(), row.end(), res[y].begin());
         }
         return res;
     }
 
-    const image_size& size() const { return _size; }
-    std::size_t width() const { return _size.width; }
-    std::size_t height() const { return _size.height; }
+    const math::vec2u& size() const { return _size; }
+    std::size_t width() const { return _size.x; }
+    std::size_t height() const { return _size.y; }
 
     Colour& at(std::size_t y, std::size_t x) { return (*_rows)[y][x]; }
     const Colour& at(std::size_t y, std::size_t x) const { return (*_rows)[y][x]; }
@@ -71,7 +67,7 @@ public:
     }
 
 private:
-    image_size _size;
+    math::vec2u _size;
     std::shared_ptr<Colour[]> _pixels;
     std::shared_ptr<std::vector<std::span<Colour>>> _rows;
 

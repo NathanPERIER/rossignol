@@ -160,7 +160,7 @@ rol::basic_image<Colour> read_pixels_no_alpha(read_structs_holder& holder, const
         rows.push_back(pixels.data() + row_bytes * y);
     }
     png_read_image(holder.png, rows.data());
-    rol::basic_image<Colour> res(rol::image_size { .width = width, .height = height});
+    rol::basic_image<Colour> res(rol::math::vec2u { .x = width, .y = height});
     for(std::size_t y = 0; y < height; y++) {
         std::span<uint8_t> source_row(rows[y], row_bytes);
         std::span<Colour> alpha_row = res[y];
@@ -179,7 +179,7 @@ rol::basic_image<Colour> read_pixels_with_alpha(read_structs_holder& holder, con
     assert(row_bytes % pixel_size == 0);
     const std::size_t width = row_bytes / pixel_size;
     // The structs are already in the correct order wo se can read directly to the buffer with a cast
-    rol::basic_image<Colour> res(rol::image_size { .width = width, .height = height });
+    rol::basic_image<Colour> res(rol::math::vec2u { .x = width, .y = height });
     std::vector<uint8_t*> rows;
     rows.reserve(height);
     for(std::size_t y = 0; y < height; y++) {
