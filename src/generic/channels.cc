@@ -1,6 +1,6 @@
-#include "rossignol/generic/extract_channel.hh"
+#include "rossignol/generic/channels.hh"
 
-#include "rossignol/algorithm/extract_channel.hh"
+#include "rossignol/algorithm/channels.hh"
 
 
 namespace rol::generic {

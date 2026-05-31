@@ -1,4 +1,4 @@
-#include "rossignol/algorithm/extract_channel.hh"
+#include "rossignol/algorithm/channels.hh"
 
 #include "rossignol/algorithm/map_pixels.hh"
 #include "rossignol/colour/conv/numeric.hh"
