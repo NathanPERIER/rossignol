@@ -44,6 +44,10 @@ public:
         return (_p1.x == _p2.x || _p1.y == _p2.y);
     }
 
+    rect intersect(const rect& r) const {
+	    return rect(std::max(x1(), r.x1()), std::max(y1(), r.y1()), std::min(x2(), r.x2()), std::min(y2(), r.y2()));
+    }
+
     rect& operator+=(const vec2_type& offset) {
         _p1 += offset;
         _p2 += offset;
@@ -60,10 +64,5 @@ private:
 	vec2_type _p1;
 	vec2_type _p2;
 };
-
-
-rect intersect(const rect& r1, const rect& r2) {
-	return rect(std::max(r1.x1(), r2.x1()), std::max(r1.y1(), r2.y1()), std::min(r1.x2(), r2.x2()), std::min(r1.y2(), r2.y2()));
-}
 
 } // namespace rol::math
