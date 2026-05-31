@@ -131,16 +131,16 @@ double decay_colour_impl<double>::operator()(const rol::greyscalea& col) const {
 
 namespace rol {
 
-template <typename T>
-requires(variant_alternative<T, colour>)
-T decay_colour(const colour& col) {
-    return std::visit(::decay_colour_impl<T>{}, col);
+template <typename Colour>
+requires(variant_alternative<Colour, colour::variant>)
+Colour colour::decay_to() const {
+    return std::visit(::decay_colour_impl<Colour>{}, _col);
 }
 
-template rol::rgba decay_colour(const colour& col);
-template rol::greyscalea decay_colour(const colour& col);
-template bool decay_colour(const colour& col);
-template uint8_t decay_colour(const colour& col);
-template double decay_colour(const colour& col);
+template rol::rgba colour::decay_to() const;
+template rol::greyscalea colour::decay_to() const;
+template bool colour::decay_to() const;
+template uint8_t colour::decay_to() const;
+template double colour::decay_to() const;
 
 } // namespace rol

@@ -9,23 +9,24 @@
 
 namespace rol {
 
-using colour = std::variant<rgba, greyscalea, bool, uint8_t, double>;
+class colour {
+public:
+    using variant = std::variant<rgba, greyscalea, bool, uint8_t, double>;
 
-colour get_colour(builtin_rgb_colour col) {
-    return get_rgb_colour(col);
-}
+    template <typename Colour>
+    requires(variant_alternative<Colour, variant>)
+    colour(const Colour& col): _col(col) {}
 
-colour get_colour(builtin_greyscale_colour col) {
-    return get_greyscale_colour(col);
-}
+    colour(builtin_binary_colour col): _col(get_binary_colour(col)) {}
+    colour(builtin_greyscale_colour col): _col(get_greyscale_colour(col)) {}
+    colour(builtin_rgb_colour col): _col(get_rgb_colour(col)) {}
 
-colour get_colour(builtin_binary_colour col) {
-    return get_binary_colour(col);
-}
+    template <typename Colour>
+    requires(variant_alternative<Colour, variant>)
+    Colour decay_to() const;
 
-
-template <typename T>
-requires(variant_alternative<T, colour>)
-T decay_colour(const colour& col);
+private:
+    variant _col;
+};
 
 } // namespace rol
