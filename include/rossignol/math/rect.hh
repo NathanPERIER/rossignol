@@ -60,6 +60,18 @@ public:
         return res;
     }
 
+    rect& operator-=(const vec2_type& offset) {
+        _p1 -= offset;
+        _p2 -= offset;
+        return *this;
+    }
+
+    rect operator-(const vec2_type& offset) const {
+        rect res(*this);
+        res -= offset;
+        return res;
+    }
+
 private:
 	vec2_type _p1;
 	vec2_type _p2;
