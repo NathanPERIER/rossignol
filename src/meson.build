@@ -10,6 +10,7 @@ rossignol_sources = [
     'colour/generic.cc',
     'colour/conv/cylindrical.cc',
     'generic/binarise.cc',
+    'generic/bit_planes.cc',
     'generic/channels.cc',
     'generic/coefficients.cc',
     'generic/colourmap.cc',
