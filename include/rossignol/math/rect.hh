@@ -48,6 +48,10 @@ public:
 	    return rect(std::max(x1(), r.x1()), std::max(y1(), r.y1()), std::min(x2(), r.x2()), std::min(y2(), r.y2()));
     }
 
+    rect encompass(const rect& r) const {
+	    return rect(std::min(x1(), r.x1()), std::min(y1(), r.y1()), std::max(x2(), r.x2()), std::max(y2(), r.y2()));
+    }
+
     rect& operator+=(const vec2_type& offset) {
         _p1 += offset;
         _p2 += offset;
