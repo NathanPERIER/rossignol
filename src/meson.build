@@ -6,6 +6,7 @@ rossignol_sources = [
     'algorithm/colourmap.cc',
     'algorithm/greyscale.cc',
     'algorithm/rgb.cc',
+    'algorithm/generators/random.cc',
     'colour/colourmap.cc',
     'colour/generic.cc',
     'colour/conv/cylindrical.cc',
