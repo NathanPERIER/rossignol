@@ -11,7 +11,7 @@ namespace rol::detail {
 
 template <uint32_t Factor, uint32_t RedCoeff, uint32_t GreenCoeff, uint32_t BlueCoeff>
 requires((Factor >= 1) && (0 <= RedCoeff && RedCoeff <= Factor) && (0 <= GreenCoeff && GreenCoeff <= Factor) && (0 <= BlueCoeff && BlueCoeff <= Factor) && (RedCoeff + BlueCoeff + GreenCoeff == Factor))
-uint8_t combine_channels(const rgba& col) {
+inline uint8_t combine_channels(const rgba& col) {
     return static_cast<uint8_t>((
           static_cast<uint32_t>(col.r) * RedCoeff
         + static_cast<uint32_t>(col.g) * GreenCoeff
@@ -21,7 +21,7 @@ uint8_t combine_channels(const rgba& col) {
 
 template <double RedCoeff, double GreenCoeff, double BlueCoeff>
 requires((0.0 <= RedCoeff && RedCoeff <= 1.0) && (0.0 <= GreenCoeff && GreenCoeff <= 1.0) && (0.0 <= BlueCoeff && BlueCoeff <= 1.0) && (RedCoeff + BlueCoeff + GreenCoeff == 1.0))
-uint8_t combine_channels(const rgba& col) {
+inline uint8_t combine_channels(const rgba& col) {
     return static_cast<double>(col.r) * RedCoeff
          + static_cast<double>(col.g) * GreenCoeff
          + static_cast<double>(col.b) * BlueCoeff;
@@ -62,7 +62,7 @@ requires(any_of<DestColour, rgba>)
 DestColour colour_conv(const greyscalea& col);
 
 template <>
-rgba colour_conv<rgba>(const greyscalea& col) {
+inline rgba colour_conv<rgba>(const greyscalea& col) {
     return rgba {
         .r = col.grey,
         .g = col.grey,

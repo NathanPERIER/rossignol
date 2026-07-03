@@ -9,7 +9,7 @@ namespace rol::algo {
 
 template <typename ColourOut, typename ColourIn, typename ColourMapper>
 requires(yield_invocable<ColourMapper, ColourOut, ColourIn>)
-basic_image<ColourOut> map_pixels(const basic_image<ColourIn>& img, const ColourMapper& transform) {
+inline basic_image<ColourOut> map_pixels(const basic_image<ColourIn>& img, const ColourMapper& transform) {
     basic_image<ColourOut> res(img.size());
 
     for(std::size_t y = 0; y < img.height(); y++) {
