@@ -10,7 +10,7 @@
 
 namespace rol {
 
-double hue(const rgba& col);
+double hue_coeff(const rgba& col);
 double chroma(const rgba& col);
 
 template <typename SaturationColour>

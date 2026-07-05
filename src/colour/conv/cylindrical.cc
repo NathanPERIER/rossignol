@@ -46,7 +46,7 @@ double compute_hue(const rol::rgba& col, const min_max_channel& minmax, const do
             res = (static_cast<double>(col.r - col.g) / chroma) + 4.0;
         }
     }
-    return res * 60.0;
+    return (res * 60.0) / 360.0;
 }
 
 double compute_hsl_saturation(const double& chroma, const double& lightness) {
@@ -77,10 +77,10 @@ double chroma(const rgba& col) {
     return ::compute_chroma(::min_max_channel::from(col));
 }
 
-double hue(const rgba& col) {
+double hue_coeff(const rgba& col) {
     const ::min_max_channel minmax = ::min_max_channel::from(col);
     const double chroma = ::compute_chroma(minmax);
-    return ::compute_hue(col, minmax, chroma) / 360.0;
+    return ::compute_hue(col, minmax, chroma);
 }
 
 template <>
