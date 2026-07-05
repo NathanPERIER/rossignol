@@ -23,4 +23,15 @@ inline basic_image<ColourOut> map_pixels(const basic_image<ColourIn>& img, const
     return res;
 }
 
+template <typename Colour, typename ColourTransformer>
+requires(yield_invocable<ColourTransformer, void, Colour&>)
+inline void edit_pixels_inplace(basic_image<Colour>& img, const ColourTransformer& transform) {
+    for(std::size_t y = 0; y < img.height(); y++) {
+        std::span<Colour> row = img[y];
+        for(std::size_t x = 0; x < img.width(); x++) {
+            transform(row[x]);
+        }
+    }
+}
+
 } // namespace rol::algo
