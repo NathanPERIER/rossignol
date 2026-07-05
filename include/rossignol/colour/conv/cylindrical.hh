@@ -5,13 +5,21 @@
 #include "rossignol/colour/hsl.hh"
 #include "rossignol/colour/hsv.hh"
 #include "rossignol/colour/rgb.hh"
+#include "rossignol/colour/greyscale.hh"
 #include "rossignol/utils/typing/any_of.hh"
 
 
 namespace rol {
 
 double hue_coeff(const rgba& col);
+inline double hue_coeff(const hsi& col) { return col.h; }
+inline double hue_coeff(const hsl& col) { return col.h; }
+inline double hue_coeff(const hsv& col) { return col.h; }
+
 double chroma(const rgba& col);
+double chroma(const hsi& col);
+double chroma(const hsl& col);
+double chroma(const hsv& col);
 
 template <typename SaturationColour>
 requires(any_of<SaturationColour, hsi, hsl, hsv>)
@@ -36,5 +44,17 @@ inline double intensity_coeff(const rgba& col) {
 template <typename DestColour>
 requires(any_of<DestColour, hsi, hsl, hsv>)
 DestColour colour_conv(const rgba& col);
+
+template <typename DestColour>
+requires(any_of<DestColour, rgba, greyscalea>)
+DestColour colour_conv(const hsi& col);
+
+template <typename DestColour>
+requires(any_of<DestColour, rgba, greyscalea, hsv>)
+DestColour colour_conv(const hsl& col);
+
+template <typename DestColour>
+requires(any_of<DestColour, rgba, greyscalea, hsl>)
+DestColour colour_conv(const hsv& col);
 
 } // namespace rol
