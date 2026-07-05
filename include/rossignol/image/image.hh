@@ -18,6 +18,9 @@ template <typename Colour>
 class basic_image {
 public:
     basic_image(math::vec2u size): _size(size), _pixels(std::make_shared<Colour[]>(_size.x * _size.y)), _rows(std::make_shared<std::vector<std::span<Colour>>>()) {
+        if(size.x == 0 || size.y == 0) {
+            throw std::runtime_error("Refusing to create an empty image");
+        }
         _rows->reserve(_size.y);
         for(std::size_t y = 0; y < _size.y; y++) {
             _rows->push_back(std::span<Colour>(_pixels.get() + _size.x * y, _size.x));
