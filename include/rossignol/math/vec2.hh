@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include "rossignol/utils/typing/any_of.hh"
+
 
 namespace rol::math {
 
@@ -27,24 +29,37 @@ struct vec2 {
 
 using vec2i = vec2<int64_t>;
 using vec2u = vec2<std::size_t>;
+using vec2f = vec2<double>;
 
-inline vec2i& operator-=(vec2i& v1, const vec2i& v2) {
+template <typename Number>
+requires(any_of<Number, int64_t, double>)
+inline vec2<Number>& operator-=(vec2<Number>& v1, const vec2<Number>& v2) {
     v1.x -= v2.x;
     v1.y -= v2.y;
     return v1;
 }
 
-inline vec2i operator-(const vec2i& v1, const vec2i& v2) {
-    vec2i res = v1;
+template <typename Number>
+requires(any_of<Number, int64_t, double>)
+inline vec2<Number> operator-(const vec2<Number>& v1, const vec2<Number>& v2) {
+    vec2<Number> res = v1;
     res -= v2;
     return res;
 }
 
-inline vec2i operator-(const vec2i& v) {
-    return vec2i {
+template <typename Number>
+requires(any_of<Number, int64_t, double>)
+inline vec2<Number> operator-(const vec2<Number>& v) {
+    return vec2<Number> {
         .x = -v.x,
         .y = -v.y
     };
+}
+
+template <typename Number>
+requires(any_of<Number, int64_t, double>)
+inline Number operator*(const vec2<Number>& v1, const vec2<Number>& v2) {
+    return v1.x * v2.x + v1.y * v2.y;
 }
 
 } // namespace rol::math
