@@ -3,7 +3,17 @@
 
 #include "rossignol/colour/greyscale.hh"
 #include "rossignol/colour/rgb.hh"
+#include "rossignol/math/arithmetic/precomputed_function.hh"
 #include "rossignol/utils/typing/any_of.hh"
+
+
+namespace rol::detail {
+
+inline const math::precomputed_u8_function<double> u8_to_double_impl([](uint8_t value) -> double {
+    return static_cast<double>(value) / 255.0;
+});
+
+} // namespace rol::detail
 
 
 namespace rol {
@@ -32,7 +42,7 @@ inline rgba colour_conv<rgba>(uint8_t col) {
 
 template <>
 inline double colour_conv<double>(uint8_t col) {
-    return static_cast<double>(col) / 255.0;
+    return detail::u8_to_double_impl(col);
 }
 
 
