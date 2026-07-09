@@ -21,3 +21,8 @@ png_dep = dependency('libpng')
 
 subdir('include')
 subdir('src')
+
+demos_opt = get_option('enable_demos')
+if demos_opt.enabled() or (demos_opt.auto() and not meson.is_subproject())
+    subdir('demo')
+endif
