@@ -20,6 +20,7 @@ rossignol_sources = [
     'generic/invert.cc',
     'generic/mirror.cc',
     'generic/rgb.cc',
+    'generic/sinks/file.cc',
     'image/io.cc',
     'params/generic/offset.cc',
     'params/generic/size.cc',
