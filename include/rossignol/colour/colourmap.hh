@@ -24,6 +24,9 @@ struct colourmap {
     /// @param coeff the coefficient for which we want to compute a colour (between 0.0 and 1.0)
     /// @note this can potentially have finer resolution but it is more expensive to compute
     rgba operator()(double coeff) const {
+        if(coeff <= 0) {
+            return colours[0];
+        }
         if(coeff >= 1.0) {
             return colours[255];
         }
