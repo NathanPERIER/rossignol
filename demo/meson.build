@@ -1,5 +1,7 @@
 
-rossignol_demo_names = []
+rossignol_demo_names = [
+    'filters'
+]
 
 all_demos = []
 
