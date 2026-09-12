@@ -2,6 +2,7 @@
 #pragma once
 
 #include "rossignol/image/image.hh"
+#include "rossignol/params/coefficient_type.hh"
 
 
 namespace rol::generic {
@@ -18,6 +19,24 @@ public:
 private:
     coefficient_plane operator()(const rgb_image&) const;
     coefficient_plane operator()(const greyscale_image&) const;
+    coefficient_plane operator()(const binary_image&) const;
+};
+
+
+class extract_coefficient {
+public:
+    extract_coefficient(coefficient_type type): _type(type) {}
+
+    coefficient_plane operator()(const rgb_image& img) const;
+    coefficient_plane operator()(const greyscale_image& img) const;
+
+    coefficient_plane operator()(const image& img) const;
+
+private:
+    coefficient_type _type;
+
+    coefficient_plane operator()(const layer&) const;
+    coefficient_plane operator()(const coefficient_plane&) const;
     coefficient_plane operator()(const binary_image&) const;
 };
 
