@@ -41,11 +41,11 @@ double compute_hue(const rol::rgba& col, const min_max_channel& minmax, const do
     double res = 0;
     if(chroma != 0) {
         if(minmax.max == col.r) {
-            res = std::fmod(static_cast<double>(col.g - col.b) / chroma, 6);
+            res = std::fmod(static_cast<double>(col.g - col.b) / 255.0 / chroma, 6);
         } else if(minmax.max == col.g) {
-            res = (static_cast<double>(col.b - col.r) / chroma) + 2.0;
+            res = (static_cast<double>(col.b - col.r) / 255.0 / chroma) + 2.0;
         } else {
-            res = (static_cast<double>(col.r - col.g) / chroma) + 4.0;
+            res = (static_cast<double>(col.r - col.g) / 255.0 / chroma) + 4.0;
         }
     }
     return (res * 60.0) / 360.0;
