@@ -218,6 +218,12 @@ void unit_step_filter_inplace(coefficient_plane& img, const params::coefficient_
     });
 }
 
+coefficient_plane unit_step_filter_mask(const coefficient_plane& img, const params::coefficient_filter& filter) {
+    return ::with_unit_step_filter(filter, [&img]<rol::yield_invocable<double, double> FilterImpl>(const FilterImpl& filter) {
+        return map_pixels<double>(img, [&filter](const double& pixel) { return filter(pixel); });
+    });
+}
+
 
 /*--------------------+
 |  Sigmoid            |
@@ -226,6 +232,12 @@ void unit_step_filter_inplace(coefficient_plane& img, const params::coefficient_
 void sigmoid_filter_inplace(coefficient_plane& img, const params::coefficient_filter& filter, double steepness) {
     ::with_sigmoid_filter(filter, steepness, [&img]<rol::yield_invocable<double, double> FilterImpl>(const FilterImpl& filter) {
         edit_pixels_inplace(img, [&filter](double& pixel) { pixel *= filter(pixel); });
+    });
+}
+
+coefficient_plane sigmoid_filter_mask(const coefficient_plane& img, const params::coefficient_filter& filter, double steepness) {
+    return ::with_sigmoid_filter(filter, steepness, [&img]<rol::yield_invocable<double, double> FilterImpl>(const FilterImpl& filter) {
+        return map_pixels<double>(img, [&filter](const double& pixel) { return filter(pixel); });
     });
 }
 
