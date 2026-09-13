@@ -7,12 +7,17 @@
 
 namespace rol::algo {
 
-void high_pass_unit_step_inplace(coefficient_plane& img, double threshold);
-void low_pass_unit_step_inplace(coefficient_plane& img, double threshold);
-void band_pass_unit_step_inplace(coefficient_plane& img, double low_threshold, double high_threshold);
+/*--------------------+
+|  Unit step          |
++--------------------*/
 
-void high_pass_sigmoid_inplace(coefficient_plane& img, double threshold, double steepness = defaults::sigmoid_steepness);
-void low_pass_sigmoid_inplace(coefficient_plane& img, double threshold, double steepness = defaults::sigmoid_steepness);
-void band_pass_sigmoid_inplace(coefficient_plane& img, double low_threshold, double high_threshold, double steepness = defaults::sigmoid_steepness);
+void unit_step_filter_inplace(coefficient_plane& img, const params::coefficient_filter& filter);
+
+
+/*--------------------+
+|  Sigmoid            |
++--------------------*/
+
+void sigmoid_filter_inplace(coefficient_plane& img, const params::coefficient_filter& filter, double steepness = defaults::sigmoid_steepness);
 
 } // namespace rol::algo
