@@ -35,6 +35,38 @@ rol::coefficient_plane extract_coefficient_impl(const rol::basic_image<Colour>& 
     }
 }
 
+/// @brief inserts a coefficient in the image if possible, else throws an exception
+template <rol::coefficient_type Coeff, typename Colour>
+rol::basic_image<Colour> try_insert_coefficient(const rol::basic_image<Colour>& img, const rol::coefficient_plane& coeffs, const rol::math::vec2i& offset) {
+    if constexpr (rol::algo::detail::editable_coefficient<Coeff, Colour>) {
+        rol::basic_image<Colour> res = img.clone();
+        rol::algo::insert_coefficient_inplace<Coeff>(res, coeffs, offset);
+        return res;
+    } else {
+        throw std::runtime_error("Unable to insert coefficient in the provided image type");
+    }
+}
+
+template <typename Colour>
+rol::basic_image<Colour> insert_coefficient_impl(const rol::basic_image<Colour>& img, const rol::coefficient_type& type, const rol::coefficient_plane& coeffs, const rol::math::vec2i& offset) {
+    switch (type) {
+        case rol::coefficient_type::red:            return try_insert_coefficient<rol::coefficient_type::red>(img, coeffs, offset);
+        case rol::coefficient_type::green:          return try_insert_coefficient<rol::coefficient_type::green>(img, coeffs, offset);
+        case rol::coefficient_type::blue:           return try_insert_coefficient<rol::coefficient_type::blue>(img, coeffs, offset);
+        case rol::coefficient_type::grey:           return try_insert_coefficient<rol::coefficient_type::grey>(img, coeffs, offset);
+        case rol::coefficient_type::alpha:          return try_insert_coefficient<rol::coefficient_type::alpha>(img, coeffs, offset);
+        case rol::coefficient_type::hue:            return try_insert_coefficient<rol::coefficient_type::hue>(img, coeffs, offset);
+        case rol::coefficient_type::chroma:         return try_insert_coefficient<rol::coefficient_type::chroma>(img, coeffs, offset);
+        case rol::coefficient_type::hsi_saturation: return try_insert_coefficient<rol::coefficient_type::hsi_saturation>(img, coeffs, offset);
+        case rol::coefficient_type::hsl_saturation: return try_insert_coefficient<rol::coefficient_type::hsl_saturation>(img, coeffs, offset);
+        case rol::coefficient_type::hsv_saturation: return try_insert_coefficient<rol::coefficient_type::hsv_saturation>(img, coeffs, offset);
+        case rol::coefficient_type::lightness:      return try_insert_coefficient<rol::coefficient_type::lightness>(img, coeffs, offset);
+        case rol::coefficient_type::value:          return try_insert_coefficient<rol::coefficient_type::value>(img, coeffs, offset);
+        case rol::coefficient_type::intensity:      return try_insert_coefficient<rol::coefficient_type::intensity>(img, coeffs, offset);
+        default: throw std::runtime_error("Unsupported coefficient type");
+    }
+}
+
 } // anonymous namespace
 
 
@@ -83,6 +115,35 @@ coefficient_plane extract_coefficient::operator()(const binary_image&) const {
 
 coefficient_plane extract_coefficient::operator()(const image& img) const {
     return std::visit([this](const auto& img) -> coefficient_plane { return operator()(img); }, img);
+}
+
+
+math::vec2i insert_coefficient::get_offset(const rol::math::vec2u& input_size) const {
+    return compute_offset(_x_offset, _y_offset, _coeffs.size(), input_size);
+}
+
+rgb_image insert_coefficient::operator()(const rgb_image& img) const {
+    return ::insert_coefficient_impl(img, _type, _coeffs, get_offset(img.size()));
+}
+
+greyscale_image insert_coefficient::operator()(const greyscale_image& img) const {
+    return ::insert_coefficient_impl(img, _type, _coeffs, get_offset(img.size()));
+}
+
+binary_image insert_coefficient::operator()(const binary_image&) const {
+    throw std::runtime_error("Unable to insert coefficients in a binary image");
+}
+
+layer insert_coefficient::operator()(const layer&) const {
+    throw std::runtime_error("Unable to insert coefficients in an unnamed channel (maybe use to_channel instead ?)");
+
+}
+coefficient_plane insert_coefficient::operator()(const coefficient_plane&) const {
+    throw std::runtime_error("Unable to insert coefficients in a coefficient plane");
+}
+
+image insert_coefficient::operator()(const image& img) const {
+    return std::visit([this](const auto& img) -> image { return operator()(img); }, img);
 }
 
 } // namespace rol::generic
