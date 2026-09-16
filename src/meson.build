@@ -20,6 +20,7 @@ rossignol_sources = [
     'generic/fill.cc',
     'generic/filters.cc',
     'generic/greyscale.cc',
+    'generic/rescale_values.cc',
     'generic/invert.cc',
     'generic/mirror.cc',
     'generic/rgb.cc',
