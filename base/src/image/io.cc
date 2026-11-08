@@ -190,7 +190,7 @@ rol::basic_image<Colour> read_pixels_with_alpha(read_structs_holder& holder, con
 }
 
 // TODO logging
-rol::image read_pixels(read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height) {
+rol::parsed_image_t read_pixels(read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height) {
     int bit_depth = 0;
     int colour_type = 0;
     int interlace_type = 0;
@@ -356,31 +356,12 @@ std::vector<uint8_t> dump_image_impl(rol::basic_image<Colour>& img) {
     return res;
 }
 
-struct dump_generic_image_impl {
-    std::vector<uint8_t> operator()(rol::rgb_image& img) {
-        return rol::dump_image(img);
-    }
-    std::vector<uint8_t> operator()(rol::greyscale_image& img) {
-        return rol::dump_image(img);
-    }
-    std::vector<uint8_t> operator()(rol::binary_image&) {
-        throw std::runtime_error("Cannot dump a binary image to PNG (maybe convert to greyscale ?)");
-    }
-    std::vector<uint8_t> operator()(rol::layer&) {
-        throw std::runtime_error("Cannot dump an unnamed layer to PNG (maybe convert to greyscale ?)");
-    }
-    std::vector<uint8_t> operator()(rol::coefficient_plane&) {
-        throw std::runtime_error("Cannot dump a coefficient plane to PNG (maybe convert to greyscale ?)");
-    }
-};
-
-
 } // anonymous namespace
 
 
 namespace rol {
 
-image parse_image(std::span<const uint8_t> raw) {
+parsed_image_t parse_image(std::span<const uint8_t> raw) {
     static constexpr std::size_t sig_size = 8;
     if(raw.size() < sig_size || png_sig_cmp(raw.data(), 0, sig_size) != 0) {
         throw std::runtime_error("Bad PNG signature");
@@ -397,7 +378,7 @@ image parse_image(std::span<const uint8_t> raw) {
 
     const std::size_t row_bytes = png_get_rowbytes(holder.png, holder.begin_info);
     const std::size_t height = png_get_image_height(holder.png, holder.begin_info);
-    image res = read_pixels(holder, row_bytes, height);
+    parsed_image_t res = read_pixels(holder, row_bytes, height);
 
     png_read_end(holder.png, holder.end_info);
 
@@ -413,10 +394,6 @@ std::vector<uint8_t> dump_image(rol::rgb_image& img) {
 
 std::vector<uint8_t> dump_image(rol::greyscale_image& img) {
     return ::dump_image_impl<PNG_COLOR_TYPE_GRAY_ALPHA>(img);
-}
-
-std::vector<uint8_t> dump_image(image& img) {
-    return std::visit(::dump_generic_image_impl{}, img);
 }
 
 } // namespace rol

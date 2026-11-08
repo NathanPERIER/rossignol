@@ -1,14 +1,17 @@
 
 #pragma once
 
+#include <variant>
+
 #include "rossignol/image/image.hh"
 
 
 namespace rol {
 
-image parse_image(std::span<const uint8_t> raw);
+using parsed_image_t = std::variant<rol::rgb_image, rol::greyscale_image>;
 
-std::vector<uint8_t> dump_image(image& img);
+parsed_image_t parse_image(std::span<const uint8_t> raw);
+
 std::vector<uint8_t> dump_image(rol::rgb_image& img);
 std::vector<uint8_t> dump_image(rol::greyscale_image& img);
 

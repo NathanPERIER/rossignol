@@ -2,7 +2,7 @@
 #pragma once
 
 #include "rossignol/colour/colourmap.hh"
-#include "rossignol/image/image.hh"
+#include "rossignol/image/generic.hh"
 
 
 namespace rol::generic {

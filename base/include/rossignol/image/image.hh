@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <span>
-#include <variant>
 #include <vector>
 
 #include "rossignol/colour/rgb.hh"
@@ -84,7 +83,5 @@ using greyscale_image = basic_image<greyscalea>;
 using binary_image = basic_image<bool>;
 using layer = basic_image<uint8_t>;
 using coefficient_plane = basic_image<double>;
-
-using image = std::variant<rgb_image, greyscale_image, binary_image, layer, coefficient_plane>;
 
 } // namespace rol

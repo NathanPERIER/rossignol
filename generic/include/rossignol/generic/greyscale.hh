@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "rossignol/image/image.hh"
+#include "rossignol/image/generic.hh"
 #include "rossignol/params/generic/greyscale_method.hh"
 
 

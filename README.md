@@ -38,7 +38,7 @@ int main() {
     const std::filesystem::path image_path("./birb.png");
     const std::vector<uint8_t> input_data = rol::read_file_binary(image_path);
 
-    rol::image img_in = rol::parse_image(input_data);
+    rol::parsed_image_t img_in = rol::parse_image(input_data);
 
     // Images don't have a default constructor so we'll use a pointer here
     std::unique_ptr<rol::greyscale_image> img_grey = nullptr;
@@ -50,7 +50,7 @@ int main() {
         // Convert RGB to greyscale and store in the pointer
         img_grey = std::make_unique<rol::greyscale_image>(rol::algo::greyscale_luma(std::get<rol::rgb_image>(img_in)));
     } else {
-        // The other types of images cannot actually be returned by `rol::parse_image`
+        // No other image types can actually be returned by `rol::parse_image`
         throw std::runtime_error("Unsupported image type");
     }
 
@@ -77,6 +77,7 @@ The high-level API encapsulates the low-level APIs in functor objects that can r
 // Generic operators
 #include <rossignol/generic/binarise.hh>
 #include <rossignol/generic/greyscale.hh>
+#include "rossignol/generic/sinks/file.hh"
 
 // This enables "piping" images between operators
 #include <rossignol/generic/pipeline.hh>
@@ -90,14 +91,12 @@ int main() {
     const std::filesystem::path image_path("./birb.png");
     const std::vector<uint8_t> input_data = rol::read_file_binary(image_path);
 
-    rol::image img_in = rol::parse_image(input_data);
+    rol::generic::image img_in = rol::parse_image(input_data);
 
     // Note: the parameter of `rol::generic::to_greyscale` is a variant, `rol::generic::luma` is a struct that contains a parameter for the luma coefficients
-    rol::image img_out = img_in | rol::generic::to_greyscale(rol::generic::luma()) | rol::generic::binarise(rol::generic::floyd_steinberg) | rol::generic::to_greyscale();
+    rol::generic::image img_out = img_in | rol::generic::to_greyscale(rol::generic::luma()) | rol::generic::binarise(rol::generic::floyd_steinberg) | rol::generic::to_greyscale();
 
-    const std::filesystem::path out_path("./out.png");
-    const std::vector<uint8_t> out_data = rol::dump_image(img_out);
-    rol::write_to_file(out_path, out_data);
+    img_out > rol::generic::file_sink("./out.png");
 
     return 0;
 }
