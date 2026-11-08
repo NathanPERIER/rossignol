@@ -23,6 +23,7 @@ rossignol_build_default = not meson.is_subproject()
 
 subdir('base')
 subdir('algo')
+subdir('generic')
 
 demos_opt = get_option('enable_demos')
 if demos_opt.enabled() or (demos_opt.auto() and not meson.is_subproject())
