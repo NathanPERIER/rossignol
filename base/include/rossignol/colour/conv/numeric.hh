@@ -78,7 +78,10 @@ inline DestColour colour_conv(double col);
 
 template <>
 inline uint8_t colour_conv<uint8_t>(double col) {
-    return static_cast<uint8_t>(col * 255.0);
+    if(col <= std::numeric_limits<double>::epsilon()) {
+        return 0;
+    }
+    return static_cast<uint8_t>(std::ceil(col * 256.0) - 1.0);
 }
 
 template <>
