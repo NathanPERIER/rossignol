@@ -2,7 +2,7 @@
 #pragma once
 
 #include "rossignol/colour/generic.hh"
-#include "rossignol/image/image.hh"
+#include "rossignol/image/generic.hh"
 #include "rossignol/params/generic/offset.hh"
 #include "rossignol/params/generic/size.hh"
 

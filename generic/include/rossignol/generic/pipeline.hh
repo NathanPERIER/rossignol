@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "rossignol/image/image.hh"
+#include "rossignol/image/generic.hh"
 #include "rossignol/utils/typing/functional.hh"
 #include "rossignol/utils/typing/variant.hh"
 
@@ -10,11 +10,11 @@ namespace rol::generic::detail {
 
 /// @brief matches one of the image types in the generic image variant
 template <typename Image>
-concept pipeline_specific_image = rol::variant_alternative<Image, rol::image>;
+concept pipeline_specific_image = rol::variant_alternative<Image, rol::generic::image>;
 
 /// @brief return type of an operator, either the geenric image or one of its sub-types
 template <typename Image>
-concept pipeline_return_type = std::same_as<rol::image, Image> || pipeline_specific_image<Image>;
+concept pipeline_return_type = std::same_as<rol::generic::image, Image> || pipeline_specific_image<Image>;
 
 /// @brief helper that matches any callable returning a generic image or one of its sub-types
 template <typename Generator, typename... Args>
@@ -22,7 +22,7 @@ concept pipeline_image_generator = std::invocable<const Generator, Args...> && p
 
 /// @brief operator that takes a generic image as input
 template <typename Op>
-concept pipeline_generic_image_operator = pipeline_image_generator<Op, const rol::image&>;
+concept pipeline_generic_image_operator = pipeline_image_generator<Op, const rol::generic::image&>;
 
 /// @brief operator that takes a sub-type of the generic image as input
 template <typename Op, typename Colour>
@@ -30,7 +30,7 @@ concept pipeline_specific_image_operator = pipeline_specific_image<rol::basic_im
 
 /// @brief sink that takes a generic image as input
 template <typename Sink>
-concept pipeline_generic_image_sink = rol::yield_invocable<Sink, void, const rol::image&>;
+concept pipeline_generic_image_sink = rol::yield_invocable<Sink, void, const rol::generic::image&>;
 
 
 /// @brief sink that takes a generic image as input
@@ -46,7 +46,7 @@ namespace rol::generic {
 /// @tparam Op the operator type
 /// @return the result of the operator (either a generic image or a sub-type)
 template <detail::pipeline_generic_image_operator Op>
-auto operator|(const rol::image& img, const Op& op) {
+auto operator|(const rol::generic::image& img, const Op& op) {
     return op(img);
 }
 
@@ -62,7 +62,7 @@ auto operator|(const rol::basic_image<Colour>& img, const Op& op) {
 /// @brief enables "piping" a generic image to a sink
 /// @tparam Sink the sink type
 template <detail::pipeline_generic_image_sink Sink>
-void operator>(const rol::image& img, const Sink& sink) {
+void operator>(const rol::generic::image& img, const Sink& sink) {
     sink(img);
 }
 
