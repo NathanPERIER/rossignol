@@ -108,7 +108,7 @@ rol::rgba cylindrical_to_rgb(const InputColour& col, const OffsetFunc& compute_o
         r = 0;
         g = second_component;
         b = chroma;
-    } else if(hue_div60 < 6) {
+    } else if(hue_div60 < 5) {
         r = second_component;
         g = 0;
         b = chroma;
