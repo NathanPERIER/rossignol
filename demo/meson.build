@@ -8,7 +8,7 @@ all_demos = []
 foreach name: rossignol_demo_names
     all_demos += executable(name,
         '@0@.cc'.format(name),
-        dependencies: [rossignol_dep],
+        dependencies: [rossignol_generic_dep],
         cpp_args: cpp_warning_flags,
         install: false
     )
