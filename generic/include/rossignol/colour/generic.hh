@@ -7,7 +7,7 @@
 #include "rossignol/utils/typing/variant.hh"
 
 
-namespace rol {
+namespace rol::generic {
 
 class colour {
 public:
@@ -29,4 +29,4 @@ private:
     variant _col;
 };
 
-} // namespace rol
+} // namespace rol::generic

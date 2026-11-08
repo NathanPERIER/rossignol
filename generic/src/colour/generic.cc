@@ -129,7 +129,7 @@ double decay_colour_impl<double>::operator()(const rol::greyscalea& col) const {
 } // anonymous namespace
 
 
-namespace rol {
+namespace rol::generic {
 
 template <typename Colour>
 requires(variant_alternative<Colour, colour::variant>)
@@ -143,4 +143,4 @@ template bool colour::decay_to() const;
 template uint8_t colour::decay_to() const;
 template double colour::decay_to() const;
 
-} // namespace rol
+} // namespace rol::generic
