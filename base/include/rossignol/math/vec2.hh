@@ -23,6 +23,9 @@ struct vec2 {
         res += offset;
         return res;
     }
+
+    bool operator==(const vec2<Number>&) const = default;
+    bool operator!=(const vec2<Number>&) const = default;
 };
 
 using vec2i = vec2<int64_t>;
