@@ -1,24 +1,25 @@
 #include "rossignol/generic/bit_planes.hh"
 
 #include "rossignol/algorithm/bit_planes.hh"
+#include "rossignol/utils/errors/check.hh"
 
 
 namespace rol::generic {
 
 binary_image extract_bit_plane::operator()(const rgb_image&) const {
-    throw std::runtime_error("Cannot extract a bit plane from an RGB image (extract a channel first)");
+    throw rol::input_error("Cannot extract a bit plane from an RGB image (extract a channel first)");
 }
 
 binary_image extract_bit_plane::operator()(const greyscale_image&) const {
-    throw std::runtime_error("Cannot extract a bit plane from a greyscale image (extract a channel first)");
+    throw rol::input_error("Cannot extract a bit plane from a greyscale image (extract a channel first)");
 }
 
 binary_image extract_bit_plane::operator()(const binary_image&) const {
-    throw std::runtime_error("Cannot extract a bit plane from a binary image");
+    throw rol::input_error("Cannot extract a bit plane from a binary image");
 }
 
 binary_image extract_bit_plane::operator()(const coefficient_plane&) const {
-    throw std::runtime_error("Cannot extract a bit plane from a coefficient plane");
+    throw rol::input_error("Cannot extract a bit plane from a coefficient plane");
 }
 
 binary_image extract_bit_plane::operator()(const layer& img) const {
@@ -32,7 +33,7 @@ binary_image extract_bit_plane::operator()(const layer& img) const {
         case 6: return algo::extract_bit_plane<6>(img);
         case 7: return algo::extract_bit_plane<7>(img);
     }
-    throw std::runtime_error("Bad index for bit plane extraction");
+    throw rol::input_error("Bad index for bit plane extraction");
 }
 
 binary_image extract_bit_plane::operator()(const image& img) const {

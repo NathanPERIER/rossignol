@@ -1,6 +1,7 @@
 #include "rossignol/params/generic/offset.hh"
 
 #include "rossignol/math/align.hh"
+#include "rossignol/utils/errors/check.hh"
 
 
 namespace {
@@ -24,7 +25,7 @@ public:
             case rol::horizontal_alignment::centre: return rol::math::aligned_horizontal_offset<rol::horizontal_alignment::centre>(_object_size, _reference_size);
             case rol::horizontal_alignment::right:  return rol::math::aligned_horizontal_offset<rol::horizontal_alignment::right>(_object_size, _reference_size);
         }
-        throw std::runtime_error("Unknown horizontal alignment");
+        throw rol::input_error("Unknown horizontal alignment");
     }
 
     int64_t operator()(const rol::vertical_alignment& align) {
@@ -33,7 +34,7 @@ public:
             case rol::vertical_alignment::centre: return rol::math::aligned_vertical_offset<rol::vertical_alignment::centre>(_object_size, _reference_size);
             case rol::vertical_alignment::bottom: return rol::math::aligned_vertical_offset<rol::vertical_alignment::bottom>(_object_size, _reference_size);
         }
-        throw std::runtime_error("Unknown vertical alignment");
+        throw rol::input_error("Unknown vertical alignment");
     }
 
 private:

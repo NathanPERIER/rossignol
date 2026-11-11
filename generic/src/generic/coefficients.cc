@@ -1,20 +1,21 @@
 #include "rossignol/generic/coefficients.hh"
 
 #include "rossignol/algorithm/coefficients.hh"
+#include "rossignol/utils/errors/check.hh"
 
 
 namespace rol::generic {
 
 coefficient_plane to_coefficients::operator()(const rgb_image&) const {
-    throw std::runtime_error("Unable to convert an RGB image to coefficients (need an extracted layer)");
+    throw rol::input_error("Unable to convert an RGB image to coefficients (need an extracted layer)");
 }
 
 coefficient_plane to_coefficients::operator()(const greyscale_image&) const {
-    throw std::runtime_error("Unable to convert a greyscale image to coefficients (need an extracted layer)");
+    throw rol::input_error("Unable to convert a greyscale image to coefficients (need an extracted layer)");
 }
 
 coefficient_plane to_coefficients::operator()(const binary_image&) const {
-    throw std::runtime_error("Unable to convert a binary image to coefficients (need an extracted layer)");
+    throw rol::input_error("Unable to convert a binary image to coefficients (need an extracted layer)");
 }
 
 coefficient_plane to_coefficients::operator()(const layer& img) const {

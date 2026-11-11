@@ -1,6 +1,7 @@
 #include "rossignol/generic/filters.hh"
 
 #include "rossignol/algorithm/filters.hh"
+#include "rossignol/utils/errors/check.hh"
 
 
 namespace {
@@ -49,15 +50,15 @@ private:
 namespace rol::generic {
 
 coefficient_plane coefficient_filter::operator()(const rgb_image&) const {
-    throw std::runtime_error("Coefficient filtering is not available for RGB images (maybe extract a coefficient first ?)");
+    throw rol::input_error("Coefficient filtering is not available for RGB images (maybe extract a coefficient first ?)");
 }
 
 coefficient_plane coefficient_filter::operator()(const greyscale_image&) const {
-    throw std::runtime_error("Coefficient filtering is not available for greyscale images (maybe extract a coefficient first ?)");
+    throw rol::input_error("Coefficient filtering is not available for greyscale images (maybe extract a coefficient first ?)");
 }
 
 coefficient_plane coefficient_filter::operator()(const layer&) const {
-    throw std::runtime_error("Coefficient filtering is not available for unnamed channels (maybe convert to a coefficient first ?)");
+    throw rol::input_error("Coefficient filtering is not available for unnamed channels (maybe convert to a coefficient first ?)");
 }
 
 coefficient_plane coefficient_filter::operator()(const coefficient_plane& img) const {
@@ -65,7 +66,7 @@ coefficient_plane coefficient_filter::operator()(const coefficient_plane& img) c
 }
 
 coefficient_plane coefficient_filter::operator()(const binary_image&) const {
-    throw std::runtime_error("Coefficient filtering is not available for binary images (maybe convert to a coefficient first ?)");
+    throw rol::input_error("Coefficient filtering is not available for binary images (maybe convert to a coefficient first ?)");
 }
 
 coefficient_plane coefficient_filter::operator()(const image& img) const {
@@ -74,15 +75,15 @@ coefficient_plane coefficient_filter::operator()(const image& img) const {
 
 
 coefficient_plane coefficient_filter_mask::operator()(const rgb_image&) const {
-    throw std::runtime_error("Coefficient filtering is not available for RGB images (maybe extract a coefficient first ?)");
+    throw rol::input_error("Coefficient filtering is not available for RGB images (maybe extract a coefficient first ?)");
 }
 
 coefficient_plane coefficient_filter_mask::operator()(const greyscale_image&) const {
-    throw std::runtime_error("Coefficient filtering is not available for greyscale images (maybe extract a coefficient first ?)");
+    throw rol::input_error("Coefficient filtering is not available for greyscale images (maybe extract a coefficient first ?)");
 }
 
 coefficient_plane coefficient_filter_mask::operator()(const layer&) const {
-    throw std::runtime_error("Coefficient filtering is not available for unnamed channels (maybe convert to a coefficient first ?)");
+    throw rol::input_error("Coefficient filtering is not available for unnamed channels (maybe convert to a coefficient first ?)");
 }
 
 coefficient_plane coefficient_filter_mask::operator()(const coefficient_plane& img) const {
@@ -90,7 +91,7 @@ coefficient_plane coefficient_filter_mask::operator()(const coefficient_plane& i
 }
 
 coefficient_plane coefficient_filter_mask::operator()(const binary_image&) const {
-    throw std::runtime_error("Coefficient filtering is not available for binary images (maybe convert to a coefficient first ?)");
+    throw rol::input_error("Coefficient filtering is not available for binary images (maybe convert to a coefficient first ?)");
 }
 
 coefficient_plane coefficient_filter_mask::operator()(const image& img) const {

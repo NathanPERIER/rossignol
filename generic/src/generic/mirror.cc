@@ -1,6 +1,7 @@
 #include "rossignol/generic/mirror.hh"
 
 #include "rossignol/algorithm/mirror.hh"
+#include "rossignol/utils/errors/check.hh"
 
 
 namespace rol::generic {
@@ -10,7 +11,7 @@ basic_image<Colour> mirror::operator()(const basic_image<Colour>& img) const {
     switch(_direction) {
         case mirror_direction::horizontal: return rol::algo::horizontal_mirror(img);
         case mirror_direction::vertical:   return rol::algo::vertical_mirror(img);
-        default: throw std::runtime_error("Unsupported mirror direction");
+        default: throw rol::input_error("Unsupported mirror direction");
     }
 }
 

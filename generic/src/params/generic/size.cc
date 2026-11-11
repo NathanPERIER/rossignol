@@ -1,5 +1,7 @@
 #include "rossignol/params/generic/size.hh"
 
+#include "rossignol/utils/errors/check.hh"
+
 
 namespace {
 
@@ -8,16 +10,12 @@ public:
     compute_length(std::size_t image_length): _image_length(image_length) {}
 
     std::size_t operator()(const rol::generic::pixel_count& count) const {
-        if(count.value < 0) {
-            throw std::runtime_error("Length in pixels must be greater than zero");
-        }
+        ROL_CHECK(count.value >= 0, "Length in pixels must be greater than zero");
         return static_cast<std::size_t>(count.value);
     }
 
     std::size_t operator()(const rol::generic::percentage& pct) const {
-        if(pct.value < 0) {
-            throw std::runtime_error("Length percentage must be greater than zero");
-        }
+        ROL_CHECK(pct.value >= 0, "Length percentage must be greater than zero");
         return pct.apply(_image_length);
     }
 
