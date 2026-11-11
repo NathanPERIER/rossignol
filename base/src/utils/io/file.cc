@@ -5,6 +5,8 @@
 
 #include <fmt/std.h>
 
+#include "rossignol/utils/io/io_error.hh"
+
 
 namespace {
 
@@ -30,7 +32,7 @@ std::string read_file_text(const std::filesystem::path& filepath) {
     std::string res;
     std::ifstream in(filepath, std::ios::in);
     if(in.fail()) {
-        throw std::runtime_error(fmt::format("Could not open file {} for reading", filepath));
+        throw rol::io_error(fmt::format("Could not open file {} for reading", filepath));
     }
     while(!in.eof()) {
         const std::size_t initial_size = res.size();
@@ -44,7 +46,7 @@ std::string read_file_text(const std::filesystem::path& filepath) {
         }
     }
     if(in.bad() || !in.eof()) {
-        throw std::runtime_error(fmt::format("Error while reading file {}", filepath));
+        throw rol::io_error(fmt::format("Error while reading file {}", filepath));
     }
     return res;
 }
@@ -53,7 +55,7 @@ std::vector<uint8_t> read_file_binary(const std::filesystem::path& filepath) {
     std::vector<uint8_t> res;
     std::ifstream in(filepath, std::ios::in | std::ios::binary);
     if(in.fail()) {
-        throw std::runtime_error(fmt::format("Could not open file {} for reading", filepath));
+        throw rol::io_error(fmt::format("Could not open file {} for reading", filepath));
     }
     while(!in.eof()) {
         const std::size_t initial_size = res.size();
@@ -66,7 +68,7 @@ std::vector<uint8_t> read_file_binary(const std::filesystem::path& filepath) {
         }
     }
     if(in.bad() || !in.eof()) {
-        throw std::runtime_error(fmt::format("Error while reading file {}", filepath));
+        throw rol::io_error(fmt::format("Error while reading file {}", filepath));
     }
     return res;
 }
