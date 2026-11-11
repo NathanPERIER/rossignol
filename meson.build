@@ -13,8 +13,8 @@ cpp_warning_flags = [
   '-Werror=empty-body'
 ]
 
-fmt_proj = cmake.subproject('fmt')
-fmt_dep = fmt_proj.dependency('fmt')
+fmt_proj = subproject('fmt', required: true)
+fmt_dep = fmt_proj.get_variable('fmt_dep')
 
 png_dep = dependency('libpng')
 

@@ -1,4 +1,12 @@
 [wrap-git]
+directory = fmt-11.0.2
 url = https://github.com/fmtlib/fmt.git
-revision = 10.1.1
+revision = 0c9fce2ffefecfdce794e1859584e25877b7b592
 clone-recursive = false
+patch_filename = fmt_11.0.2-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/fmt_11.0.2-1/get_patch
+patch_hash = 90c9e3b8e8f29713d40ca949f6f93ad115d78d7fb921064112bc6179e6427c5e
+wrapdb_version = 11.0.2-1
+
+[provide]
+fmt = fmt_dep
