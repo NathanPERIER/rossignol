@@ -3,8 +3,7 @@
 // TODO precondition macro
 #include <cassert>
 
-// TODO #include <spdlog/spdlog.h>
-#include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
 #include <png.h>
 
@@ -16,8 +15,7 @@ void error_callback(png_struct*, png_const_charp msg) {
 }
 
 void warn_callback(png_struct*, png_const_charp msg) {
-    // TODO use spdlog
-    fmt::print("[WARN] PNG warning: {}\n", msg);
+    SPDLOG_WARN("PNG warning: {}", msg);
 }
 
 
@@ -231,23 +229,25 @@ void list_chunks(png_struct* png, png_info* info) {
         "oFFs", "tIME", "pCAL", "sRGB", "iCCP", "sPLT", "sCAL", "IDAT"
     };
 
-    fmt::print("  - flags:");
+    std::string log_line("  - flags:");
+    std::back_insert_iterator format_it = std::back_inserter(log_line);
 
     bool flag_found = false;
     for(std::size_t i = 0; i < nb_flags; i++) {
         if(png_get_valid(png, info, flags[i] ) != 0) {
-            fmt::print(" {}", flag_names[i]);
+            fmt::format_to(format_it, " {}", flag_names[i]);
             flag_found = true;
         }
     }
 
     if(!flag_found) {
-        fmt::print(" (none)");
+        fmt::format_to(format_it, " (none)");
     }
 
-    fmt::print("\n");
+    SPDLOG_TRACE("{}", log_line);
+    log_line.clear();
 
-    fmt::print("  - texts:");
+    fmt::format_to(format_it, "  - texts:");
     png_text* texts = nullptr;
     std::size_t nb_texts = png_get_text(png, info, &texts, nullptr);
     if(nb_texts > 0) {
@@ -263,27 +263,27 @@ void list_chunks(png_struct* png, png_info* info) {
         }
 
         // collect names and number of chunks
-        if(tN > 0)  { fmt::print(" tEXt({})", tN); }
-        if(zN > 0)  { fmt::print(" zTXt({})", zN); }
-        if(iN > 0)  { fmt::print(" iTXt({})", iN); }
-        if(izN > 0) { fmt::print(" iTXt-compressed({})", izN); }
-        if(unk > 0) { fmt::print(" unknown({})", unk); }
+        if(tN > 0)  { fmt::format_to(format_it, " tEXt({})", tN); }
+        if(zN > 0)  { fmt::format_to(format_it, " zTXt({})", zN); }
+        if(iN > 0)  { fmt::format_to(format_it, " iTXt({})", iN); }
+        if(izN > 0) { fmt::format_to(format_it, " iTXt-compressed({})", izN); }
+        if(unk > 0) { fmt::format_to(format_it, " unknown({})", unk); }
     } else {
-        fmt::print(" (none)");
+        fmt::format_to(format_it, " (none)");
     }
 
-    fmt::print("\n");
+    SPDLOG_TRACE("{}", log_line);
+    log_line.clear();
 
-    fmt::print("  - unknowns:");
     png_unknown_chunk* unknowns;
     std::size_t nb_unknowns = png_get_unknown_chunks(png, info, &unknowns);
     if(nb_unknowns > 0) {
-        fmt::print("\n");
+        SPDLOG_TRACE("  - unknowns:");
         for(std::size_t i = 0; i < nb_unknowns; i++) {
-            fmt::print("    - {} ({}B)\n", reinterpret_cast<const char*>(unknowns[i].name), unknowns[i].size);
+            SPDLOG_TRACE("    - {} ({}B)\n", reinterpret_cast<const char*>(unknowns[i].name), unknowns[i].size);
         }
     } else {
-        fmt::print(" (none)\n");
+        SPDLOG_TRACE("  - unknowns: (none)");
     }
 }
 
@@ -298,25 +298,29 @@ void print_info(read_structs_holder& holder) {
         return;
     }
 
-    fmt::print("{}x{} {}-bit", width, height, bit_depth);
+    std::string log_line;
+    std::back_insert_iterator format_it = std::back_inserter(log_line);
+
+    fmt::format_to(format_it, "{}x{} {}-bit", width, height, bit_depth);
     switch(colour_type) {
-        case PNG_COLOR_TYPE_GRAY:       fmt::print(" grayscale");       break;
-        case PNG_COLOR_TYPE_GRAY_ALPHA: fmt::print(" gray with alpha"); break;
-        case PNG_COLOR_TYPE_PALETTE:    fmt::print(" palette");         break;
-        case PNG_COLOR_TYPE_RGB:        fmt::print(" RGB");             break;
-        case PNG_COLOR_TYPE_RGB_ALPHA:  fmt::print(" RGBA");            break;
-        default: fmt::print(" Unknown colour type");
+        case PNG_COLOR_TYPE_GRAY:       fmt::format_to(format_it, " grayscale");       break;
+        case PNG_COLOR_TYPE_GRAY_ALPHA: fmt::format_to(format_it, " gray with alpha"); break;
+        case PNG_COLOR_TYPE_PALETTE:    fmt::format_to(format_it, " palette");         break;
+        case PNG_COLOR_TYPE_RGB:        fmt::format_to(format_it, " RGB");             break;
+        case PNG_COLOR_TYPE_RGB_ALPHA:  fmt::format_to(format_it, " RGBA");            break;
+        default: fmt::format_to(format_it, " Unknown colour type");
     }
 
     if(interlace_type == PNG_INTERLACE_ADAM7) {
-        fmt::print(" interlaced");
+        fmt::format_to(format_it, " interlaced");
     }
 
-    fmt::print("\n");
+    SPDLOG_TRACE("{}", log_line);
+    log_line.clear();
 
-    fmt::print("Chunks before IDAT:\n");
+    SPDLOG_TRACE("Chunks before IDAT:");
     list_chunks(holder.png, holder.begin_info);
-    fmt::print("Chunks after IDAT:\n");
+    SPDLOG_TRACE("Chunks after IDAT:");
     list_chunks(holder.png, holder.end_info);
 }
 
@@ -382,7 +386,9 @@ parsed_image_t parse_image(std::span<const uint8_t> raw) {
 
     png_read_end(holder.png, holder.end_info);
 
-    ::print_info(holder);
+    if(spdlog::get_level() <= spdlog::level::trace) {
+        ::print_info(holder);
+    }
 
     return res;
 }

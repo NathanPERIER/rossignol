@@ -3,10 +3,11 @@ rossignol_base_sources = [
     'colour/colourmap.cc',
     'colour/conv/cylindrical.cc',
     'image/io.cc',
+    'logging/init.cc',
     'utils/io/file.cc'
 ]
 
-rossignol_base_deps = [fmt_dep, png_dep]
+rossignol_base_deps = [spdlog_dep, png_dep]
 
 rossignol_base_lib = static_library(
     'rossignol_base_static', rossignol_base_sources,
