@@ -16,6 +16,12 @@ cpp_warning_flags = [
 fmt_proj = subproject('fmt', required: true)
 fmt_dep = fmt_proj.get_variable('fmt_dep')
 
+spdlog_proj = subproject('spdlog', required: true)
+spdlog_dep = declare_dependency(
+    dependencies: [fmt_dep, spdlog_proj.get_variable('spdlog_dep')],
+    compile_args: ['-DSPDLOG_FMT_EXTERNAL', '-DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE']
+)
+
 png_dep = dependency('libpng')
 
 
