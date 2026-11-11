@@ -5,6 +5,7 @@
 #include <png.h>
 
 #include "rossignol/utils/errors/assert.hh"
+#include "rossignol/utils/io/file.hh"
 #include "rossignol/utils/io/io_error.hh"
 
 
@@ -393,6 +394,12 @@ parsed_image_t parse_image(std::span<const uint8_t> raw) {
     return res;
 }
 
+parsed_image_t load_image(const std::filesystem::path& path) {
+    // TODO can we use libpng directly to perform I/O ?
+    const std::vector<uint8_t> in_data = rol::read_file_binary(path);
+    return parse_image(in_data);
+}
+
 
 std::vector<uint8_t> dump_image(rol::rgb_image& img) {
     return ::dump_image_impl<PNG_COLOR_TYPE_RGBA>(img);
@@ -400,6 +407,19 @@ std::vector<uint8_t> dump_image(rol::rgb_image& img) {
 
 std::vector<uint8_t> dump_image(rol::greyscale_image& img) {
     return ::dump_image_impl<PNG_COLOR_TYPE_GRAY_ALPHA>(img);
+}
+
+
+void write_image(rol::rgb_image& img, const std::filesystem::path& path) {
+    // TODO can we use libpng directly to perform I/O ?
+    const std::vector<uint8_t> img_data = dump_image(img);
+    rol::write_to_file(path, img_data);
+}
+
+void write_image(rol::greyscale_image& img, const std::filesystem::path& path) {
+    // TODO can we use libpng directly to perform I/O ?
+    const std::vector<uint8_t> img_data = dump_image(img);
+    rol::write_to_file(path, img_data);
 }
 
 } // namespace rol

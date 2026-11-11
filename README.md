@@ -31,14 +31,11 @@ The low-level API is a collection of algorithms defined in the `rol::algo` names
 
 // For reading and writing files
 #include <rossignol/image/io.hh>
-#include <rossignol/utils/io/file.hh>
 
 
 int main() {
     const std::filesystem::path image_path("./birb.png");
-    const std::vector<uint8_t> input_data = rol::read_file_binary(image_path);
-
-    rol::parsed_image_t img_in = rol::parse_image(input_data);
+    rol::parsed_image_t img_in = rol::load_image(image_path);
 
     // Images don't have a default constructor so we'll use a pointer here
     std::unique_ptr<rol::greyscale_image> img_grey = nullptr;
@@ -61,9 +58,7 @@ int main() {
     // Hence, we have to convert it back to greyscale
     rol::greyscale_image img_out = rol::algo::greyscale(img_dither);
 
-    const std::filesystem::path out_path("./out.png");
-    const std::vector<uint8_t> out_data = rol::dump_image(img_out);
-    rol::write_to_file(out_path, out_data);
+    rol::write_image(img_out, out_path);
 
     return 0;
 }
