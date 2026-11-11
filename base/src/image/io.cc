@@ -1,12 +1,10 @@
 #include "rossignol/image/io.hh"
 
-// TODO precondition macro
-#include <cassert>
-
 #include <spdlog/spdlog.h>
 
 #include <png.h>
 
+#include "rossignol/utils/errors/assert.hh"
 #include "rossignol/utils/io/io_error.hh"
 
 
@@ -151,7 +149,7 @@ requires(std::same_as<Colour, rol::rgba> || std::same_as<Colour, rol::greyscalea
 rol::basic_image<Colour> read_pixels_no_alpha(read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height) {
     static_assert(sizeof(Colour) > 1);
     static constexpr std::size_t source_pixel_size = sizeof(Colour) - 1;
-    assert(row_bytes % source_pixel_size == 0);
+    ROL_ASSERT(row_bytes % source_pixel_size == 0, "The row size should be a multiple of the pixel size (in bytes)");
     const std::size_t width = row_bytes / source_pixel_size;
     std::vector<uint8_t> pixels(height * row_bytes);
     std::vector<uint8_t*> rows;
@@ -176,7 +174,7 @@ template <typename Colour>
 requires(std::same_as<Colour, rol::rgba> || std::same_as<Colour, rol::greyscalea>)
 rol::basic_image<Colour> read_pixels_with_alpha(read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height) {
     static constexpr std::size_t pixel_size = sizeof(Colour);
-    assert(row_bytes % pixel_size == 0);
+    ROL_ASSERT(row_bytes % pixel_size == 0, "The row size should be a multiple of the pixel size (in bytes)");
     const std::size_t width = row_bytes / pixel_size;
     // The structs are already in the correct order wo se can read directly to the buffer with a cast
     rol::basic_image<Colour> res(rol::math::vec2u { .x = width, .y = height });
