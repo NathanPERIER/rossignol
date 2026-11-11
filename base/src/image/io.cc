@@ -7,11 +7,13 @@
 
 #include <png.h>
 
+#include "rossignol/utils/io/io_error.hh"
+
 
 namespace {
 
 void error_callback(png_struct*, png_const_charp msg) {
-    throw std::runtime_error(fmt::format("Got PNG error: {}", msg));
+    throw rol::io_error(fmt::format("Got PNG error: {}", msg));
 }
 
 void warn_callback(png_struct*, png_const_charp msg) {
@@ -36,17 +38,17 @@ public:
 
         res.png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, error_callback, warn_callback);
         if(res.png == nullptr) {
-            throw std::runtime_error("Failed to create PNG read structure");
+            throw rol::io_error("Failed to create PNG read structure");
         }
 
         res.begin_info = png_create_info_struct(res.png);
         if(res.begin_info == nullptr) {
-            throw std::runtime_error("Failed to create PNG begin info structure");
+            throw rol::io_error("Failed to create PNG begin info structure");
         }
 
         res.end_info = png_create_info_struct(res.png);
         if(res.end_info == nullptr) {
-            throw std::runtime_error("Failed to create PNG begin info structure");
+            throw rol::io_error("Failed to create PNG begin info structure");
         }
 
         return res;
@@ -83,12 +85,12 @@ public:
 
         res.png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, error_callback, warn_callback);
         if(res.png == nullptr) {
-            throw std::runtime_error("Failed to create PNG write structure");
+            throw rol::io_error("Failed to create PNG write structure");
         }
 
         res.info = png_create_info_struct(res.png);
         if(res.info == nullptr) {
-            throw std::runtime_error("Failed to create PNG info structure");
+            throw rol::io_error("Failed to create PNG info structure");
         }
 
         return res;
@@ -194,15 +196,15 @@ rol::parsed_image_t read_pixels(read_structs_holder& holder, const std::size_t r
     int interlace_type = 0;
 
     if(png_get_IHDR(holder.png, holder.begin_info, nullptr, nullptr, &bit_depth, &colour_type, &interlace_type, nullptr, nullptr) == 0) [[unlikely]] {
-        throw std::runtime_error("Unable to read IHDR metadata from PNG image");
+        throw rol::io_error("Unable to read IHDR metadata from PNG image");
     }
 
     if(bit_depth != 8) {
-        throw std::runtime_error(fmt::format("Only 8-bit colour channel depth is supported (got bit_depth={})", bit_depth));
+        throw rol::io_error(fmt::format("Only 8-bit colour channel depth is supported (got bit_depth={})", bit_depth));
     }
 
     if(interlace_type != PNG_INTERLACE_NONE) [[unlikely]] {
-        throw std::runtime_error("Interlacing is not supported");
+        throw rol::io_error("Interlacing is not supported");
     }
 
     switch(colour_type) {
@@ -210,8 +212,8 @@ rol::parsed_image_t read_pixels(read_structs_holder& holder, const std::size_t r
         case PNG_COLOR_TYPE_GRAY_ALPHA: return read_pixels_with_alpha<rol::greyscalea>(holder, row_bytes, height);
         case PNG_COLOR_TYPE_RGB:        return read_pixels_no_alpha<rol::rgba>(holder, row_bytes, height);
         case PNG_COLOR_TYPE_RGB_ALPHA:  return read_pixels_with_alpha<rol::rgba>(holder, row_bytes, height);
-        case PNG_COLOR_TYPE_PALETTE:    throw std::runtime_error("Palette images are currently not supported");
-        default: throw std::runtime_error("Unknown colour type in PNG image");
+        case PNG_COLOR_TYPE_PALETTE:    throw rol::io_error("Palette images are currently not supported");
+        default: throw rol::io_error("Unknown colour type in PNG image");
     }
 }
 
@@ -368,7 +370,7 @@ namespace rol {
 parsed_image_t parse_image(std::span<const uint8_t> raw) {
     static constexpr std::size_t sig_size = 8;
     if(raw.size() < sig_size || png_sig_cmp(raw.data(), 0, sig_size) != 0) {
-        throw std::runtime_error("Bad PNG signature");
+        throw rol::io_error("Bad PNG signature");
     }
 
     ::read_structs_holder holder = ::read_structs_holder::make();
