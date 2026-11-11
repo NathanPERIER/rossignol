@@ -1,0 +1,12 @@
+[wrap-git]
+directory = spdlog-1.15.0
+url = https://github.com/gabime/spdlog.git
+revision = 8e5613379f5140fefb0b60412fbf1f5406e7c7f8
+clone-recursive = false
+patch_filename = spdlog_1.15.0-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/spdlog_1.15.0-1/get_patch
+patch_hash = 72bd578ff0eb4f5a84e5bd63ddc7b2ece84aad5abb516b54c8750306ae78df28
+wrapdb_version = 1.15.0-1
+
+[provide]
+spdlog = spdlog_dep
