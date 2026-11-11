@@ -2,6 +2,7 @@
 
 #include "rossignol/colour/conv/greyscale.hh"
 #include "rossignol/colour/conv/numeric.hh"
+#include "rossignol/utils/errors/check.hh"
 
 
 namespace {
@@ -28,7 +29,7 @@ template<>
 template<>
 rol::greyscalea decay_colour_impl<rol::greyscalea>::operator()(const rol::rgba& col) const {
     if(col.r != col.g || col.g != col.b) {
-        throw std::runtime_error("Cannot implicitely convert RGB colour to greyscale");
+        throw rol::input_error("Cannot implicitely convert RGB colour to greyscale");
     }
     return rol::greyscalea {
         .grey = col.r,
@@ -45,7 +46,7 @@ template<>
 template<>
 bool decay_colour_impl<bool>::operator()(const rol::rgba& col) const {
     if(col.r != col.g || col.g != col.b || col.r != 0 || col.r != 255) {
-        throw std::runtime_error("Cannot implicitely convert RGB colour to binary colour");
+        throw rol::input_error("Cannot implicitely convert RGB colour to binary colour");
     }
     return (col.r == 255);
 }
@@ -59,7 +60,7 @@ bool decay_colour_impl<bool>::operator()(const rol::greyscalea& col) const {
     if(col.grey == 0) {
         return false;
     }
-    throw std::runtime_error("Cannot implicitely convert greyscale colour to binary colour");
+    throw rol::input_error("Cannot implicitely convert greyscale colour to binary colour");
 }
 
 template<>
@@ -71,7 +72,7 @@ bool decay_colour_impl<bool>::operator()(const uint8_t& col) const {
     if(col == 0) {
         return false;
     }
-    throw std::runtime_error("Cannot implicitely convert channel value to binary colour");
+    throw rol::input_error("Cannot implicitely convert channel value to binary colour");
 }
 
 template<>
@@ -83,7 +84,7 @@ bool decay_colour_impl<bool>::operator()(const double& col) const {
     if(col == 0.0) {
         return false;
     }
-    throw std::runtime_error("Cannot implicitely convert coefficient to binary colour");
+    throw rol::input_error("Cannot implicitely convert coefficient to binary colour");
 }
 
 
@@ -95,7 +96,7 @@ template<>
 template<>
 uint8_t decay_colour_impl<uint8_t>::operator()(const rol::rgba& col) const {
     if(col.r != col.g || col.g != col.b) {
-        throw std::runtime_error("Cannot implicitely convert RGB colour to channel value");
+        throw rol::input_error("Cannot implicitely convert RGB colour to channel value");
     }
     return col.r;
 }
@@ -115,7 +116,7 @@ template<>
 template<>
 double decay_colour_impl<double>::operator()(const rol::rgba& col) const {
     if(col.r != col.g || col.g != col.b) {
-        throw std::runtime_error("Cannot implicitely convert RGB colour to coefficient");
+        throw rol::input_error("Cannot implicitely convert RGB colour to coefficient");
     }
     return rol::colour_conv<double>(col.r);
 }

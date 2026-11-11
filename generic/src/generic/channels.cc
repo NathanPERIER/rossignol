@@ -1,6 +1,7 @@
 #include "rossignol/generic/channels.hh"
 
 #include "rossignol/algorithm/channels.hh"
+#include "rossignol/utils/errors/check.hh"
 
 
 namespace rol::generic {
@@ -10,9 +11,9 @@ layer extract_channel::operator()(const rgb_image& img) const {
         case rol::layer_name::red:   return rol::algo::extract_channel<rol::layer_name::red>(img);
         case rol::layer_name::green: return rol::algo::extract_channel<rol::layer_name::green>(img);
         case rol::layer_name::blue:  return rol::algo::extract_channel<rol::layer_name::blue>(img);
-        case rol::layer_name::grey:  throw std::runtime_error("RGB image does not have a grey layer to extract");
+        case rol::layer_name::grey:  throw rol::input_error("RGB image does not have a grey layer to extract");
         case rol::layer_name::alpha: return rol::algo::extract_channel<rol::layer_name::alpha>(img);
-        default: throw std::runtime_error("Unsupported layer for extraction");
+        default: throw rol::input_error("Unsupported layer for extraction");
     }
 }
 
@@ -23,7 +24,7 @@ layer extract_channel::operator()(const greyscale_image& img) const {
         case rol::layer_name::blue:  // Implicitely fallback to grey
         case rol::layer_name::grey:  return rol::algo::extract_channel<rol::layer_name::grey>(img);
         case rol::layer_name::alpha: return rol::algo::extract_channel<rol::layer_name::alpha>(img);
-        default: throw std::runtime_error("Unsupported layer for extraction");
+        default: throw rol::input_error("Unsupported layer for extraction");
     }
 }
 
@@ -34,16 +35,16 @@ layer extract_channel::operator()(const binary_image& img) const {
         case rol::layer_name::blue:  // Implicitely fallback to grey
         case rol::layer_name::grey:  return rol::algo::extract_channel(img); // Implicit conversion to grey
         case rol::layer_name::alpha: return rol::layer(img.size(), 255); // Implicitely fully opaque
-        default: throw std::runtime_error("Unsupported layer for extraction");
+        default: throw rol::input_error("Unsupported layer for extraction");
     }
 }
 
 layer extract_channel::operator()(const layer&) const {
-    throw std::runtime_error("Unable to extract layer from unnamed layer");
+    throw rol::input_error("Unable to extract layer from unnamed layer");
 }
 
 layer extract_channel::operator()(const coefficient_plane&) const {
-    throw std::runtime_error("Unable to extract layer from coefficient plane (use direct conversion instead)");
+    throw rol::input_error("Unable to extract layer from coefficient plane (use direct conversion instead)");
 }
 
 layer extract_channel::operator()(const image& img) const {
@@ -58,9 +59,9 @@ rgb_image insert_channel::operator()(const rgb_image& img) const {
         case rol::layer_name::red:   rol::algo::insert_channel_inplace<rol::layer_name::red>(res, _layer, offset);   break;
         case rol::layer_name::green: rol::algo::insert_channel_inplace<rol::layer_name::green>(res, _layer, offset); break;
         case rol::layer_name::blue:  rol::algo::insert_channel_inplace<rol::layer_name::blue>(res, _layer, offset);  break;
-        case rol::layer_name::grey:  throw std::runtime_error("RGB image does not have a grey layer for insertion");
+        case rol::layer_name::grey:  throw rol::input_error("RGB image does not have a grey layer for insertion");
         case rol::layer_name::alpha: rol::algo::insert_channel_inplace<rol::layer_name::alpha>(res, _layer, offset); break;
-        default: throw std::runtime_error("Unsupported layer for insertion");
+        default: throw rol::input_error("Unsupported layer for insertion");
     }
     return res;
 }
@@ -69,26 +70,26 @@ greyscale_image insert_channel::operator()(const greyscale_image& img) const {
     const math::vec2i offset = compute_offset(_x_offset, _y_offset, _layer.size(), img.size());
     greyscale_image res = img.clone();
     switch(_name) {
-        case rol::layer_name::red:   throw std::runtime_error("Greyscale image does not have a red layer for insertion");
-        case rol::layer_name::green: throw std::runtime_error("Greyscale image does not have a green layer for insertion");
-        case rol::layer_name::blue:  throw std::runtime_error("Greyscale image does not have a blue layer for insertion");
+        case rol::layer_name::red:   throw rol::input_error("Greyscale image does not have a red layer for insertion");
+        case rol::layer_name::green: throw rol::input_error("Greyscale image does not have a green layer for insertion");
+        case rol::layer_name::blue:  throw rol::input_error("Greyscale image does not have a blue layer for insertion");
         case rol::layer_name::grey:  rol::algo::insert_channel_inplace<rol::layer_name::grey>(res, _layer, offset);  break;
         case rol::layer_name::alpha: rol::algo::insert_channel_inplace<rol::layer_name::alpha>(res, _layer, offset); break;
-        default: throw std::runtime_error("Unsupported layer for insertion");
+        default: throw rol::input_error("Unsupported layer for insertion");
     }
     return res;
 }
 
 binary_image insert_channel::operator()(const binary_image&) const {
-    throw std::runtime_error("Unable to insert a channel in a binary image");
+    throw rol::input_error("Unable to insert a channel in a binary image");
 }
 
 layer insert_channel::operator()(const layer&) const {
-    throw std::runtime_error("Unable to insert a channel in an unnamed layer");
+    throw rol::input_error("Unable to insert a channel in an unnamed layer");
 }
 
 coefficient_plane insert_channel::operator()(const coefficient_plane&) const {
-    throw std::runtime_error("Unable to insert a channel in a coefficient plane");
+    throw rol::input_error("Unable to insert a channel in a coefficient plane");
 }
 
 image insert_channel::operator()(const image& img) const {
@@ -97,15 +98,15 @@ image insert_channel::operator()(const image& img) const {
 
 
 layer to_channel::operator()(const rgb_image&) const {
-    throw std::runtime_error("Unable to convert an RGB image directly to an unnamed layer (use extraction instead)");
+    throw rol::input_error("Unable to convert an RGB image directly to an unnamed layer (use extraction instead)");
 }
 
 layer to_channel::operator()(const greyscale_image&) const {
-    throw std::runtime_error("Unable to convert a greyscale image directly to an unnamed layer (use extraction instead)");
+    throw rol::input_error("Unable to convert a greyscale image directly to an unnamed layer (use extraction instead)");
 }
 
 layer to_channel::operator()(const binary_image&) const {
-    throw std::runtime_error("Unable to convert a binary image directly to an unnamed layer (use extraction instead)");
+    throw rol::input_error("Unable to convert a binary image directly to an unnamed layer (use extraction instead)");
 }
 
 layer to_channel::operator()(const coefficient_plane& img) const {

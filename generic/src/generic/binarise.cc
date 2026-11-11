@@ -1,6 +1,7 @@
 #include "rossignol/generic/binarise.hh"
 
 #include "rossignol/algorithm/binarise.hh"
+#include "rossignol/utils/errors/check.hh"
 
 
 namespace {
@@ -26,7 +27,7 @@ private:
 namespace rol::generic {
 
 binary_image binarise::operator()(const rgb_image&) const {
-    throw std::runtime_error("Unable to binarise an RGB image, convert it to greyscale first");
+    throw rol::input_error("Unable to binarise an RGB image, convert it to greyscale first");
 }
 
 binary_image binarise::operator()(const greyscale_image& img) const {
@@ -38,11 +39,11 @@ binary_image binarise::operator()(const binary_image& img) const {
 }
 
 binary_image binarise::operator()(const layer&) const {
-    throw std::runtime_error("Unable to binarise an unnamed layer, convert it to greyscale first");
+    throw rol::input_error("Unable to binarise an unnamed layer, convert it to greyscale first");
 }
 
 binary_image binarise::operator()(const coefficient_plane&) const {
-    throw std::runtime_error("Unable to binarise a coefficient plane (maybe convert to greyscale ?)");
+    throw rol::input_error("Unable to binarise a coefficient plane (maybe convert to greyscale ?)");
 }
 
 binary_image binarise::operator()(const image& img) const {

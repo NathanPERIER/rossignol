@@ -1,12 +1,13 @@
 #include "rossignol/generic/colourmap.hh"
 
 #include "rossignol/algorithm/colourmap.hh"
+#include "rossignol/utils/errors/check.hh"
 
 
 namespace rol::generic {
 
 rgb_image apply_colourmap::operator()(const rgb_image&) const {
-    throw std::runtime_error("Unable to apply a colourmap on an RGB image (maybe extract a channel/coefficient or convert to greyscale ?)");
+    throw rol::input_error("Unable to apply a colourmap on an RGB image (maybe extract a channel/coefficient or convert to greyscale ?)");
 }
 
 rgb_image apply_colourmap::operator()(const greyscale_image& img) const {
@@ -14,7 +15,7 @@ rgb_image apply_colourmap::operator()(const greyscale_image& img) const {
 }
 
 rgb_image apply_colourmap::operator()(const binary_image&) const {
-    throw std::runtime_error("Unable to apply a colourmap on a binary image");
+    throw rol::input_error("Unable to apply a colourmap on a binary image");
 }
 
 rgb_image apply_colourmap::operator()(const layer& img) const {

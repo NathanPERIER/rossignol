@@ -1,6 +1,8 @@
 #include "rossignol/generic/colourise.hh"
 
 #include "rossignol/algorithm/colourise.hh"
+#include "rossignol/utils/errors/check.hh"
+
 
 namespace {
 
@@ -11,7 +13,7 @@ rol::rgb_image colourise_impl(const rol::basic_image<Colour>& img, rol::generic:
         case rol::generic::cylindrical_colour_type::hsl: return rol::algo::colourise<rol::hsl>(img, hue, saturation);
         case rol::generic::cylindrical_colour_type::hsv: return rol::algo::colourise<rol::hsv>(img, hue, saturation);
     }
-    throw std::runtime_error("Got invalid cylindrical colour type");
+    throw rol::input_error("Got invalid cylindrical colour type");
 }
 
 } // anonymous namespace

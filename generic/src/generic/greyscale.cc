@@ -1,6 +1,7 @@
 #include "rossignol/generic/greyscale.hh"
 
 #include "rossignol/algorithm/greyscale.hh"
+#include "rossignol/utils/errors/check.hh"
 
 
 namespace {
@@ -14,7 +15,7 @@ public:
             case rol::luma_method::sdtv: return rol::algo::greyscale_luma<rol::luma_method::sdtv>(_img);
             case rol::luma_method::hdtv: return rol::algo::greyscale_luma<rol::luma_method::hdtv>(_img);
             case rol::luma_method::hdr:  return rol::algo::greyscale_luma<rol::luma_method::hdr>(_img);
-            default: throw std::runtime_error("Unsupported luma method");
+            default: throw rol::input_error("Unsupported luma method");
         }
     }
     rol::greyscale_image operator()(rol::generic::detail::intensity_t) const {
