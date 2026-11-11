@@ -72,21 +72,18 @@ The high-level API encapsulates the low-level APIs in functor objects that can r
 // Generic operators
 #include <rossignol/generic/binarise.hh>
 #include <rossignol/generic/greyscale.hh>
-#include "rossignol/generic/sinks/file.hh"
 
 // This enables "piping" images between operators
 #include <rossignol/generic/pipeline.hh>
 
 // For reading and writing files
 #include <rossignol/image/io.hh>
-#include <rossignol/utils/io/file.hh>
+#include <rossignol/generic/sinks/file.hh>
 
 
 int main() {
     const std::filesystem::path image_path("./birb.png");
-    const std::vector<uint8_t> input_data = rol::read_file_binary(image_path);
-
-    rol::generic::image img_in = rol::parse_image(input_data);
+    rol::rgb_image img_in = rol::load_image_rgba(image_path);
 
     // Note: the parameter of `rol::generic::to_greyscale` is a variant, `rol::generic::luma` is a struct that contains a parameter for the luma coefficients
     rol::generic::image img_out = img_in | rol::generic::to_greyscale(rol::generic::luma()) | rol::generic::binarise(rol::generic::floyd_steinberg) | rol::generic::to_greyscale();

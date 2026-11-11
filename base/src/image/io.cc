@@ -137,6 +137,26 @@ rol::greyscalea read_pixel<rol::greyscale, rol::greyscalea>(std::span<const uint
 }
 
 template <>
+rol::rgba read_pixel<rol::greyscale, rol::rgba>(std::span<const uint8_t, 1> pixel_data) {
+    return rol::rgba {
+        .r = pixel_data[0],
+        .g = pixel_data[0],
+        .b = pixel_data[0],
+        .a = 255
+    };
+}
+
+template <>
+rol::rgba read_pixel<rol::greyscalea, rol::rgba>(std::span<const uint8_t, 2> pixel_data) {
+    return rol::rgba {
+        .r = pixel_data[0],
+        .g = pixel_data[0],
+        .b = pixel_data[0],
+        .a = pixel_data[1]
+    };
+}
+
+template <>
 rol::rgba read_pixel<rol::rgb, rol::rgba>(std::span<const uint8_t, 3> pixel_data) {
     return rol::rgba {
         .r = pixel_data[0],
@@ -400,6 +420,26 @@ parsed_image_t load_image(const std::filesystem::path& path) {
     // TODO can we use libpng directly to perform I/O ?
     const std::vector<uint8_t> in_data = rol::read_file_binary(path);
     return parse_image(in_data);
+}
+
+
+rol::rgb_image parse_image_rgba(std::span<const uint8_t> raw) {
+    return ::parse_image_wrapper(raw, [](int colour_type, read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height) -> rol::rgb_image {
+        switch(colour_type) {
+            case PNG_COLOR_TYPE_GRAY:       return ::read_pixels<rol::greyscale,  rol::rgba>(holder, row_bytes, height);
+            case PNG_COLOR_TYPE_GRAY_ALPHA: return ::read_pixels<rol::greyscalea, rol::rgba>(holder, row_bytes, height);
+            case PNG_COLOR_TYPE_RGB:        return ::read_pixels<rol::rgb,        rol::rgba>(holder, row_bytes, height);
+            case PNG_COLOR_TYPE_RGB_ALPHA:  return ::read_pixels<rol::rgba,       rol::rgba>(holder, row_bytes, height);
+            case PNG_COLOR_TYPE_PALETTE:    throw rol::io_error("Palette images are currently not supported");
+            default: throw rol::io_error("Unknown colour type in PNG image");
+        }
+    });
+}
+
+rol::rgb_image load_image_rgba(const std::filesystem::path& path) {
+    // TODO can we use libpng directly to perform I/O ?
+    const std::vector<uint8_t> in_data = rol::read_file_binary(path);
+    return parse_image_rgba(in_data);
 }
 
 
