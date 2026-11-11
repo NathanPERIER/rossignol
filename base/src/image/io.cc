@@ -124,72 +124,67 @@ void write_data_callback(png_struct* png, png_byte* data, png_size_t size) {
 void flush_data_callback(png_struct*) { /* nothing to do here */ }
 
 
-/// @brief helper to read a colour without alpha to a struct with alpha
-template <typename Colour>
-Colour add_alpha(std::span<uint8_t> pixel_data) {
-    if constexpr (std::same_as<Colour, rol::rgba>) {
-        return rol::rgba {
-            .r = pixel_data[0],
-            .g = pixel_data[1],
-            .b = pixel_data[2],
-            .a = 255,
-        };
-    } else {
-        static_assert(std::same_as<Colour, rol::greyscalea>);
-        return rol::greyscalea {
-            .grey = pixel_data[0],
-            .a = 255
-        };
-    }
+template <typename InColour, typename OutColour>
+requires(!std::same_as<InColour, OutColour>)
+OutColour read_pixel(std::span<const uint8_t, sizeof(InColour)> pixel_data);
+
+template <>
+rol::greyscalea read_pixel<rol::greyscale, rol::greyscalea>(std::span<const uint8_t, 1> pixel_data) {
+    return rol::greyscalea {
+        .grey = pixel_data[0],
+        .a = 255
+    };
 }
+
+template <>
+rol::rgba read_pixel<rol::rgb, rol::rgba>(std::span<const uint8_t, 3> pixel_data) {
+    return rol::rgba {
+        .r = pixel_data[0],
+        .g = pixel_data[1],
+        .b = pixel_data[2],
+        .a = 255
+    };
+}
+
 
 /// @brief helper to read pixels from an image (RGB or greyscale) that doesn't have alpha
-/// @note unfortunately this requires a copy
-template <typename Colour>
-requires(std::same_as<Colour, rol::rgba> || std::same_as<Colour, rol::greyscalea>)
-rol::basic_image<Colour> read_pixels_no_alpha(read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height) {
-    static_assert(sizeof(Colour) > 1);
-    static constexpr std::size_t source_pixel_size = sizeof(Colour) - 1;
+/// @note unfortunately this requires a copy when the input and output colours are not the same
+template <typename InColour, typename OutColour>
+rol::basic_image<OutColour> read_pixels(read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height) {
+    static constexpr std::size_t source_pixel_size = sizeof(InColour);
     ROL_ASSERT(row_bytes % source_pixel_size == 0, "The row size should be a multiple of the pixel size (in bytes)");
     const std::size_t width = row_bytes / source_pixel_size;
-    std::vector<uint8_t> pixels(height * row_bytes);
-    std::vector<uint8_t*> rows;
-    rows.reserve(height);
-    for(std::size_t y = 0; y < height; y++) {
-        rows.push_back(pixels.data() + row_bytes * y);
-    }
-    png_read_image(holder.png, rows.data());
-    rol::basic_image<Colour> res(rol::math::vec2u { .x = width, .y = height});
-    for(std::size_t y = 0; y < height; y++) {
-        std::span<uint8_t> source_row(rows[y], row_bytes);
-        std::span<Colour> alpha_row = res[y];
-        for(std::size_t x = 0; x < width; x++) {
-            alpha_row[x] = add_alpha<Colour>(source_row.subspan(x * source_pixel_size, source_pixel_size));
+    rol::basic_image<OutColour> res(rol::math::vec2u { .x = width, .y = height });
+
+    if constexpr (std::same_as<InColour, OutColour>) {
+        std::vector<uint8_t*> rows;
+        rows.reserve(height);
+        for(std::size_t y = 0; y < height; y++) {
+            rows.push_back(reinterpret_cast<uint8_t*>(res[y].data()));
+        }
+        png_read_image(holder.png, rows.data());
+    } else {
+        std::vector<uint8_t> row(row_bytes);
+        for(std::size_t y = 0; y < height; y++) {
+            png_read_row(holder.png, row.data(), nullptr);
+            std::span<uint8_t> source_row(row);
+            std::span<OutColour> out_row = res[y];
+            for(std::size_t x = 0; x < width; x++) {
+                out_row[x] = read_pixel<InColour, OutColour>(source_row.subspan<0, source_pixel_size>());
+                source_row = source_row.subspan(source_pixel_size);
+            }
         }
     }
+
     return res;
 }
 
-/// @brief helper to read pixels from an image (RGB or greyscale) with alpha
-template <typename Colour>
-requires(std::same_as<Colour, rol::rgba> || std::same_as<Colour, rol::greyscalea>)
-rol::basic_image<Colour> read_pixels_with_alpha(read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height) {
-    static constexpr std::size_t pixel_size = sizeof(Colour);
-    ROL_ASSERT(row_bytes % pixel_size == 0, "The row size should be a multiple of the pixel size (in bytes)");
-    const std::size_t width = row_bytes / pixel_size;
-    // The structs are already in the correct order wo se can read directly to the buffer with a cast
-    rol::basic_image<Colour> res(rol::math::vec2u { .x = width, .y = height });
-    std::vector<uint8_t*> rows;
-    rows.reserve(height);
-    for(std::size_t y = 0; y < height; y++) {
-        rows.push_back(reinterpret_cast<uint8_t*>(res[y].data()));
-    }
-    png_read_image(holder.png, rows.data());
-    return res;
-}
 
-// TODO logging
-rol::parsed_image_t read_pixels(read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height) {
+template <typename F>
+concept pixel_parser = std::invocable<F, int, read_structs_holder&, std::size_t, std::size_t>;
+
+template <pixel_parser Parser>
+auto read_pixels_wrapper(read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height, const Parser& parser) {
     int bit_depth = 0;
     int colour_type = 0;
     int interlace_type = 0;
@@ -206,14 +201,7 @@ rol::parsed_image_t read_pixels(read_structs_holder& holder, const std::size_t r
         throw rol::io_error("Interlacing is not supported");
     }
 
-    switch(colour_type) {
-        case PNG_COLOR_TYPE_GRAY:       return read_pixels_no_alpha<rol::greyscalea>(holder, row_bytes, height);
-        case PNG_COLOR_TYPE_GRAY_ALPHA: return read_pixels_with_alpha<rol::greyscalea>(holder, row_bytes, height);
-        case PNG_COLOR_TYPE_RGB:        return read_pixels_no_alpha<rol::rgba>(holder, row_bytes, height);
-        case PNG_COLOR_TYPE_RGB_ALPHA:  return read_pixels_with_alpha<rol::rgba>(holder, row_bytes, height);
-        case PNG_COLOR_TYPE_PALETTE:    throw rol::io_error("Palette images are currently not supported");
-        default: throw rol::io_error("Unknown colour type in PNG image");
-    }
+    return parser(colour_type, holder, row_bytes, height);
 }
 
 
@@ -325,6 +313,35 @@ void print_info(read_structs_holder& holder) {
     list_chunks(holder.png, holder.end_info);
 }
 
+template <pixel_parser Parser>
+auto parse_image_wrapper(std::span<const uint8_t> raw, const Parser& parser) {
+    static constexpr std::size_t sig_size = 8;
+    if(raw.size() < sig_size || png_sig_cmp(raw.data(), 0, sig_size) != 0) {
+        throw rol::io_error("Bad PNG signature");
+    }
+
+    ::read_structs_holder holder = ::read_structs_holder::make();
+
+    std::span<const uint8_t> read_buf = raw.subspan(sig_size);
+    png_set_read_fn(holder.png, reinterpret_cast<void*>(&read_buf), read_data_callback);
+    png_set_sig_bytes(holder.png, sig_size);
+    png_set_keep_unknown_chunks(holder.png, PNG_HANDLE_CHUNK_ALWAYS, nullptr, 0);
+
+    png_read_info(holder.png, holder.begin_info);
+
+    const std::size_t row_bytes = png_get_rowbytes(holder.png, holder.begin_info);
+    const std::size_t height = png_get_image_height(holder.png, holder.begin_info);
+    auto res = read_pixels_wrapper(holder, row_bytes, height, parser);
+
+    png_read_end(holder.png, holder.end_info);
+
+    if(spdlog::get_level() <= spdlog::level::trace) {
+        print_info(holder);
+    }
+
+    return res;
+}
+
 
 template <int PngColourType, typename Colour>
 std::vector<uint8_t> dump_image_impl(rol::basic_image<Colour>& img) {
@@ -367,31 +384,16 @@ std::vector<uint8_t> dump_image_impl(rol::basic_image<Colour>& img) {
 namespace rol {
 
 parsed_image_t parse_image(std::span<const uint8_t> raw) {
-    static constexpr std::size_t sig_size = 8;
-    if(raw.size() < sig_size || png_sig_cmp(raw.data(), 0, sig_size) != 0) {
-        throw rol::io_error("Bad PNG signature");
-    }
-
-    ::read_structs_holder holder = ::read_structs_holder::make();
-
-    std::span<const uint8_t> read_buf = raw.subspan(sig_size);
-    png_set_read_fn(holder.png, reinterpret_cast<void*>(&read_buf), read_data_callback);
-    png_set_sig_bytes(holder.png, sig_size);
-    png_set_keep_unknown_chunks(holder.png, PNG_HANDLE_CHUNK_ALWAYS, nullptr, 0);
-
-    png_read_info(holder.png, holder.begin_info);
-
-    const std::size_t row_bytes = png_get_rowbytes(holder.png, holder.begin_info);
-    const std::size_t height = png_get_image_height(holder.png, holder.begin_info);
-    parsed_image_t res = read_pixels(holder, row_bytes, height);
-
-    png_read_end(holder.png, holder.end_info);
-
-    if(spdlog::get_level() <= spdlog::level::trace) {
-        ::print_info(holder);
-    }
-
-    return res;
+    return ::parse_image_wrapper(raw, [](int colour_type, read_structs_holder& holder, const std::size_t row_bytes, const std::size_t height) -> rol::parsed_image_t {
+        switch(colour_type) {
+            case PNG_COLOR_TYPE_GRAY:       return ::read_pixels<rol::greyscale,  rol::greyscalea>(holder, row_bytes, height);
+            case PNG_COLOR_TYPE_GRAY_ALPHA: return ::read_pixels<rol::greyscalea, rol::greyscalea>(holder, row_bytes, height);
+            case PNG_COLOR_TYPE_RGB:        return ::read_pixels<rol::rgb,  rol::rgba>(holder, row_bytes, height);
+            case PNG_COLOR_TYPE_RGB_ALPHA:  return ::read_pixels<rol::rgba, rol::rgba>(holder, row_bytes, height);
+            case PNG_COLOR_TYPE_PALETTE:    throw rol::io_error("Palette images are currently not supported");
+            default: throw rol::io_error("Unknown colour type in PNG image");
+        }
+    });
 }
 
 parsed_image_t load_image(const std::filesystem::path& path) {
