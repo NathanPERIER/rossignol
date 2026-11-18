@@ -8,6 +8,7 @@ rossignol_algo_sources = [
     'algorithm/greyscale.cc',
     'algorithm/overflow.cc',
     'algorithm/rgb.cc',
+    'algorithm/svg.cc',
     'algorithm/generators/random.cc'
 ]
 
