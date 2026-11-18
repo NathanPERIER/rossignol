@@ -20,11 +20,17 @@ std::string to_svg(const rgb_image& img, const params::svg_options& opts) {
     const std::string_view indent = opts.pretty ? "\n    "sv : std::string_view();
     for(std::size_t y = 0; y < img.height(); y++) {
         const std::span<const rgba> line = img[y];
-        for(std::size_t x = 0; x < img.width(); x++) {
+        for(std::size_t x = 0; x < img.width();) {
             if(line[x].a == 0) {
+                x++;
                 continue;
             }
-            fmt::format_to(format_it, R"__({}<rect x="{}" y="{}" width="1" height="1" fill="{}"/>)__", indent, x, y, line[x]);
+            std::size_t next_x = x+1;
+            while(next_x < line.size() && line[next_x] == line[x]) {
+                next_x++;
+            }
+            fmt::format_to(format_it, R"__({}<rect x="{}" y="{}" width="{}" height="1" fill="{}"/>)__", indent, x, y, next_x - x, line[x]);
+            x = next_x;
         }
     }
     if(opts.pretty) {
