@@ -142,13 +142,46 @@ std::vector<std::shared_ptr<connected_component>> compute_components(const rol::
             while(current_point_it != bottom_points.end() && current_point_it->x_start < next_x) {
                 connected_component& merge_component = *all_components[current_point_it->component_idx];
                 if(merge_component.colour == row[x]) {
-                    if(merge_component.path.is_simple && current_point_it->x_start == x && current_point_it->x_end == next_x) {
-                        found_component = true;
-                        std::shared_ptr<path_point>& pt = current_point_it->start_point;
+                    found_component = true;
+                    std::shared_ptr<path_point> pt = current_point_it->start_point;
+                    const bool same_start = (current_point_it->x_start == x);
+                    const bool same_end = (current_point_it->x_end == next_x);
+                    if(same_start && same_end) {
+                        // This case is trivial, we just need to update the y coordinates
                         pt->y++;
                         pt->next->y++;
-                        next_points.push_back(bottom_line::from_point(pt, current_point_it->component_idx));
+                    } else if(same_start) {
+                        merge_component.path.is_simple = false;
+                        std::shared_ptr<path_point> p2 = path_point::make(next_x, pt->y);
+                        pt->y++;
+                        std::shared_ptr<path_point> p1 = path_point::make(next_x, pt->y);
+                        p1->next = p2;
+                        p2->next = pt->next;
+                        pt->next = p1;
+                        if(next_x < current_point_it->x_end) {
+                            current_point_it->start_point = p2;
+                        }
+                    } else if(same_end) {
+                        merge_component.path.is_simple = false;
+                        pt->next->y++;
+                        std::shared_ptr<path_point> p1 = path_point::make(x, y);
+                        std::shared_ptr<path_point> p2 = path_point::make(x, y+1);
+                        p1->next = p2;
+                        p2->next = pt->next;
+                        pt->next = p1;
+                        pt = p2;
+                    } else {
+                        merge_component.path.is_simple = false;
+                        polygonal_path temp_path = polygonal_path::make_rectangle(x, y, next_x, y+1);
+                        temp_path.end->next = pt->next;
+                        pt->next = temp_path.start;
+                        pt = temp_path.start->next;
+                        if(next_x < current_point_it->x_end) {
+                            current_point_it->start_point = temp_path.end;
+                        }
                     }
+                    next_points.push_back(bottom_line{ .component_idx = current_point_it->component_idx, .start_point = pt, .x_start = x, .x_end = next_x });
+                    break;
                 }
                 if(current_point_it->x_end <= next_x) {
                     current_point_it++;
