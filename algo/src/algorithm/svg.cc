@@ -73,37 +73,9 @@ std::size_t get_next_colour_index(std::span<const rol::rgba> row, std::size_t x)
     return next_x;
 }
 
-/// @brief This is used to compute the connected component on the first line of the image
-/// @note Those are all simple rectangles of height 1
-std::vector<std::shared_ptr<connected_component>> get_simple_components(std::span<const rol::rgba> row) {
-    std::vector<std::shared_ptr<connected_component>> res;
-    for(std::size_t x = 0; x < row.size();) {
-        if(row[x].a == 0) {
-            x++;
-            continue;
-        }
-        const std::size_t next_x = get_next_colour_index(row, x);
-        res.push_back(connected_component::make(row[x], x, next_x - x, 0));
-        x = next_x;
-    }
-    return res;
-}
-
 
 /// @brief This structure holds information on a horizontal line of a given connected component that lies on the last processed row
 struct bottom_line {
-    static bottom_line from_point(std::shared_ptr<path_point> start, std::size_t component_idx) {
-        bottom_line res;
-        res.component_idx = component_idx;
-        ROL_ASSERT(start != nullptr, "A bottom line must have a valid start point");
-        res.start_point = start;
-        res.x_start = start->x;
-        ROL_ASSERT(start->next != nullptr, "The start point of a bottom line must be followed by another point");
-        res.x_end = start->next->x;
-        ROL_ASSERT(res.x_start < res.x_end, "A bottom line cannot have a null width");
-        return res;
-    }
-
     std::size_t component_idx;
     std::shared_ptr<path_point> start_point;
     std::size_t x_start;
@@ -155,39 +127,74 @@ std::shared_ptr<path_point> aggregate_simple_line(bottom_line& current_point, co
 }
 
 
-std::vector<std::shared_ptr<connected_component>> compute_components(const rol::rgb_image& img) {
-    std::vector<std::shared_ptr<connected_component>> all_components = get_simple_components(img[0]);
-
-    std::vector<bottom_line> bottom_points;
-    std::vector<bottom_line> next_points; // TODO sth from all_components
-
+class svg_generator {
+public:
     using bottom_iterator = std::vector<bottom_line>::iterator;
 
-    // Fill the bottom points information for the first line
-    for(std::size_t i = 0; i < all_components.size(); i++) {
-        const connected_component& component = *all_components[i];
-        ROL_ASSERT(component.path.is_simple, "A connected component on the first line must be simple");
-        next_points.push_back(bottom_line::from_point(component.path.start->next, i));
+    void process(const rol::rgb_image& img);
+
+    /// @warning Connected components are stored as pointers, some may be null
+    const std::vector<std::shared_ptr<connected_component>>& connected_components() const { return _components; }
+
+private:
+    std::vector<std::shared_ptr<connected_component>> _components;
+
+    std::vector<bottom_line> _bottom_points;
+    std::vector<bottom_line> _next_points;
+
+    std::vector<bottom_iterator> _matching_bottom_lines;
+
+    void add_simple_component(const rol::rgba& col, std::size_t y, std::size_t x, std::size_t next_x);
+    void process_first_line(std::span<const rol::rgba> row);
+};
+
+
+void svg_generator::add_simple_component(const rol::rgba& col, std::size_t y, std::size_t x, std::size_t next_x) {
+    // Create the connected component
+    _components.push_back(connected_component::make(col, x, next_x - x, y));
+    // Fill bottom line information
+    _next_points.push_back(bottom_line {
+        .component_idx = _components.size() - 1,
+        .start_point = _components.back()->path.start->next,
+        .x_start = x,
+        .x_end = next_x
+    });
+}
+
+void svg_generator::process_first_line(std::span<const rol::rgba> row) {
+    for(std::size_t x = 0; x < row.size();) {
+        if(row[x].a == 0) {
+            x++;
+            continue;
+        }
+        const std::size_t next_x = get_next_colour_index(row, x);
+        add_simple_component(row[x], 0, x, next_x);
+        x = next_x;
     }
+}
+
+
+void svg_generator::process(const rol::rgb_image& img) {
+    process_first_line(img[0]);
 
     for(std::size_t y = 1; y < img.height(); y++) {
-        std::swap(bottom_points, next_points);
-        next_points.clear();
+        std::swap(_bottom_points, _next_points);
+        _next_points.clear();
         const std::span<const rol::rgba> row = img[y];
-        bottom_iterator current_point_it = bottom_points.begin();
+        bottom_iterator current_point_it = _bottom_points.begin();
         for(std::size_t x = 0; x < row.size();) {
             if(row[x].a == 0) {
                 x++;
                 continue;
             }
             const std::size_t next_x = get_next_colour_index(row, x);
-            std::vector<bottom_iterator> matching_bottom_lines;
-            while(current_point_it != bottom_points.end() && current_point_it->x_end <= x) {
+            _matching_bottom_lines.clear();
+            while(current_point_it != _bottom_points.end() && current_point_it->x_end <= x) {
                 current_point_it++;
             }
-            while(current_point_it != bottom_points.end() && current_point_it->x_start < next_x) {
-                if(row[x] == all_components[current_point_it->component_idx]->colour) {
-                    matching_bottom_lines.push_back(current_point_it);
+            while(current_point_it != _bottom_points.end() && current_point_it->x_start < next_x) {
+                if(row[x] == _components[current_point_it->component_idx]->colour) {
+                    _matching_bottom_lines.push_back(current_point_it);
                 }
                 if(current_point_it->x_end <= next_x) {
                     current_point_it++;
@@ -195,20 +202,16 @@ std::vector<std::shared_ptr<connected_component>> compute_components(const rol::
                     break;
                 }
             }
-            if(matching_bottom_lines.size() == 1) {
-                bottom_line& current_point = *matching_bottom_lines.front();
-                std::shared_ptr<path_point> pt = aggregate_simple_line(current_point, *all_components[current_point.component_idx], x, next_x, y);
-                next_points.push_back(bottom_line{ .component_idx = current_point.component_idx, .start_point = pt, .x_start = x, .x_end = next_x });
+            if(_matching_bottom_lines.size() == 1) {
+                bottom_line& current_point = *_matching_bottom_lines.front();
+                std::shared_ptr<path_point> pt = aggregate_simple_line(current_point, *_components[current_point.component_idx], x, next_x, y);
+                _next_points.push_back(bottom_line{ .component_idx = current_point.component_idx, .start_point = pt, .x_start = x, .x_end = next_x });
             } else {
-                all_components.push_back(connected_component::make(row[x], x, next_x - x, y));
-                const connected_component& component = *all_components.back();
-                next_points.push_back(bottom_line::from_point(component.path.start->next, all_components.size()-1));
+                add_simple_component(row[x], y, x, next_x);
             }
             x = next_x;
         }
     }
-
-    return all_components;
 }
 
 } // anonymous namespace
@@ -275,8 +278,9 @@ std::string to_svg(const rgb_image& img, const params::svg_options& opts) {
     }
     res.append(R"__( shape-rendering="crispEdges">)__"sv);
     const std::string_view indent = opts.pretty ? "\n    "sv : std::string_view();
-    std::vector<std::shared_ptr<::connected_component>> components = ::compute_components(img);
-    for(const std::shared_ptr<::connected_component>& component: components) {
+    ::svg_generator generator;
+    generator.process(img);
+    for(const std::shared_ptr<::connected_component>& component: generator.connected_components()) {
         if(component == nullptr) {
             continue;
         }
