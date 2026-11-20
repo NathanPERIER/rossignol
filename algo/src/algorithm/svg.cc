@@ -110,11 +110,57 @@ struct bottom_line {
 };
 
 
+std::shared_ptr<path_point> aggregate_simple_line(bottom_line& current_point, connected_component& component, std::size_t x, std::size_t next_x, std::size_t y) {
+    const std::shared_ptr<path_point> pt = current_point.start_point;
+    const bool same_start = (current_point.x_start == x);
+    const bool same_end = (current_point.x_end == next_x);
+    if(same_start && same_end) {
+        // This case is trivial, we just need to update the y coordinates
+        pt->y++;
+        pt->next->y++;
+        return pt;
+    }
+    if(same_start) {
+        component.path.is_simple = false;
+        std::shared_ptr<path_point> p2 = path_point::make(next_x, pt->y);
+        pt->y++;
+        std::shared_ptr<path_point> p1 = path_point::make(next_x, pt->y);
+        p1->next = p2;
+        p2->next = pt->next;
+        pt->next = p1;
+        if(next_x < current_point.x_end) {
+            current_point.start_point = p2;
+        }
+        return pt;
+    }
+    if(same_end) {
+        component.path.is_simple = false;
+        pt->next->y++;
+        std::shared_ptr<path_point> p1 = path_point::make(x, y);
+        std::shared_ptr<path_point> p2 = path_point::make(x, y+1);
+        p1->next = p2;
+        p2->next = pt->next;
+        pt->next = p1;
+        return p2;
+    }
+    component.path.is_simple = false;
+    polygonal_path temp_path = polygonal_path::make_rectangle(x, y, next_x, y+1);
+    temp_path.end->next = pt->next;
+    pt->next = temp_path.start;
+    if(next_x < current_point.x_end) {
+        current_point.start_point = temp_path.end;
+    }
+    return temp_path.start->next;
+}
+
+
 std::vector<std::shared_ptr<connected_component>> compute_components(const rol::rgb_image& img) {
     std::vector<std::shared_ptr<connected_component>> all_components = get_simple_components(img[0]);
 
     std::vector<bottom_line> bottom_points;
     std::vector<bottom_line> next_points; // TODO sth from all_components
+
+    using bottom_iterator = std::vector<bottom_line>::iterator;
 
     // Fill the bottom points information for the first line
     for(std::size_t i = 0; i < all_components.size(); i++) {
@@ -127,27 +173,20 @@ std::vector<std::shared_ptr<connected_component>> compute_components(const rol::
         std::swap(bottom_points, next_points);
         next_points.clear();
         const std::span<const rol::rgba> row = img[y];
-        auto current_point_it = bottom_points.begin();
+        bottom_iterator current_point_it = bottom_points.begin();
         for(std::size_t x = 0; x < row.size();) {
             if(row[x].a == 0) {
                 x++;
                 continue;
             }
-            bool found_component = false;
             const std::size_t next_x = get_next_colour_index(row, x);
+            std::vector<bottom_iterator> matching_bottom_lines;
             while(current_point_it != bottom_points.end() && current_point_it->x_end <= x) {
                 current_point_it++;
             }
             while(current_point_it != bottom_points.end() && current_point_it->x_start < next_x) {
-                connected_component& merge_component = *all_components[current_point_it->component_idx];
-                if(merge_component.colour == row[x]) {
-                    if(merge_component.path.is_simple && current_point_it->x_start == x && current_point_it->x_end == next_x) {
-                        found_component = true;
-                        std::shared_ptr<path_point>& pt = current_point_it->start_point;
-                        pt->y++;
-                        pt->next->y++;
-                        next_points.push_back(bottom_line::from_point(pt, current_point_it->component_idx));
-                    }
+                if(row[x] == all_components[current_point_it->component_idx]->colour) {
+                    matching_bottom_lines.push_back(current_point_it);
                 }
                 if(current_point_it->x_end <= next_x) {
                     current_point_it++;
@@ -155,7 +194,13 @@ std::vector<std::shared_ptr<connected_component>> compute_components(const rol::
                     break;
                 }
             }
-            if(!found_component) {
+            // If there are more than 1 matches there is the risk for multiple matches with the same component, which generates
+            // strange geometries. For now, we'll only consider cases where there is a single adjacent match.
+            if(matching_bottom_lines.size() == 1) {
+                bottom_line& current_point = *matching_bottom_lines.front();
+                std::shared_ptr<path_point> pt = aggregate_simple_line(current_point, *all_components[current_point.component_idx], x, next_x, y);
+                next_points.push_back(bottom_line{ .component_idx = current_point.component_idx, .start_point = pt, .x_start = x, .x_end = next_x });
+            } else {
                 all_components.push_back(connected_component::make(row[x], x, next_x - x, y));
                 const connected_component& component = *all_components.back();
                 next_points.push_back(bottom_line::from_point(component.path.start->next, all_components.size()-1));
