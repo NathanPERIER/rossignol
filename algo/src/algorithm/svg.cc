@@ -1,5 +1,7 @@
 #include "rossignol/algorithm/svg.hh"
 
+#include <unordered_set>
+
 #include "rossignol/utils/errors/assert.hh"
 
 
@@ -82,50 +84,6 @@ struct bottom_line {
 };
 
 
-std::shared_ptr<path_point> aggregate_simple_line(bottom_line& current_point, connected_component& component, std::size_t x, std::size_t next_x, std::size_t y) {
-    const std::shared_ptr<path_point> pt = current_point.start_point;
-    const bool same_start = (current_point.x_start == x);
-    const bool same_end = (current_point.x_end == next_x);
-    if(same_start && same_end) {
-        // This case is trivial, we just need to update the y coordinates
-        pt->y++;
-        pt->next->y++;
-        return pt;
-    }
-    if(same_start) {
-        component.path.is_simple = false;
-        std::shared_ptr<path_point> p2 = path_point::make(next_x, pt->y);
-        pt->y++;
-        std::shared_ptr<path_point> p1 = path_point::make(next_x, pt->y);
-        p1->next = p2;
-        p2->next = pt->next;
-        pt->next = p1;
-        if(next_x < current_point.x_end) {
-            current_point.start_point = p2;
-        }
-        return pt;
-    }
-    if(same_end) {
-        component.path.is_simple = false;
-        pt->next->y++;
-        std::shared_ptr<path_point> p1 = path_point::make(x, y);
-        std::shared_ptr<path_point> p2 = path_point::make(x, y+1);
-        p1->next = p2;
-        p2->next = pt->next;
-        pt->next = p1;
-        return p2;
-    }
-    component.path.is_simple = false;
-    polygonal_path temp_path = polygonal_path::make_rectangle(x, y, next_x, y+1);
-    temp_path.end->next = pt->next;
-    pt->next = temp_path.start;
-    if(next_x < current_point.x_end) {
-        current_point.start_point = temp_path.end;
-    }
-    return temp_path.start->next;
-}
-
-
 class svg_generator {
 public:
     using bottom_iterator = std::vector<bottom_line>::iterator;
@@ -145,6 +103,12 @@ private:
 
     void add_simple_component(const rol::rgba& col, std::size_t y, std::size_t x, std::size_t next_x);
     void process_first_line(std::span<const rol::rgba> row);
+
+    /// @brief Removes bottom line matches related to components that appear several times
+    void remove_multiple_line_matches();
+
+    /// @brief Aggregates a line on the current row with the matched bottom lines
+    void aggregate_with_matched_points(std::size_t y, std::size_t x, std::size_t next_x);
 };
 
 
@@ -170,6 +134,126 @@ void svg_generator::process_first_line(std::span<const rol::rgba> row) {
         add_simple_component(row[x], 0, x, next_x);
         x = next_x;
     }
+}
+
+
+void svg_generator::remove_multiple_line_matches() {
+    if(_matching_bottom_lines.empty()) {
+        return;
+    }
+
+    std::unordered_set<std::size_t> component_matches;
+    std::unordered_set<std::size_t> duplicates;
+
+    for(const bottom_iterator& match: _matching_bottom_lines) {
+        const bool inserted = component_matches.insert(match->component_idx).second;
+        if(!inserted) {
+            duplicates.insert(match->component_idx);
+        }
+    }
+
+    if(duplicates.empty()) {
+        return;
+    }
+
+    std::erase_if(_matching_bottom_lines, [&duplicates](const bottom_iterator& match) -> bool {
+        return duplicates.contains(match->component_idx);
+    });
+}
+
+
+void svg_generator::aggregate_with_matched_points(std::size_t y, std::size_t x, std::size_t next_x) {
+    ROL_ASSERT(!_matching_bottom_lines.empty(), "This method is only for cases where we have matching points on the bottom line");
+
+    // This is the index of the only component that will remain
+    // The others will be merged into this one and erased
+    const std::size_t merged_component_idx = _matching_bottom_lines.front()->component_idx;
+    std::unordered_set<std::size_t> erased_component_idx;
+
+    // Close the path on the right
+    std::shared_ptr<path_point> last_next = nullptr;
+    bool update_last_match = false;
+    const bottom_iterator last_match_it = _matching_bottom_lines.back();
+    if(next_x == last_match_it->x_end) {
+        last_next = last_match_it->start_point->next;
+        last_next->y++;
+    } else {
+        //             |               |
+        // start_point O---x--->---x---O--O p2
+        //                                |
+        //        ------------------------O last_next
+        _components[last_match_it->component_idx]->path.is_simple = false;
+        std::shared_ptr<path_point> pt = last_match_it->start_point->next;
+        std::shared_ptr<path_point> p2 = path_point::make(next_x, pt->y);
+        p2->next = pt;
+        last_next = path_point::make(next_x, pt->y + 1);
+        last_next->next = p2;
+        update_last_match = (next_x < last_match_it->x_end);
+    }
+
+    // Link each component with the previous
+    std::shared_ptr<path_point> pt = nullptr;
+    while(_matching_bottom_lines.size() > 1) {
+        bottom_line& match = *_matching_bottom_lines.back();
+        if(pt != nullptr) {
+            pt->next = match.start_point->next;
+        }
+        pt = match.start_point;
+        // Close the component at the existing start/end (since we open it elsewhere to allow linking)
+        std::shared_ptr<connected_component> component = _components[match.component_idx];
+        component->path.end->next = component->path.start;
+        // Remove the component by setting the pointer to null in the global list
+        _components[match.component_idx] = nullptr;
+        erased_component_idx.insert(match.component_idx);
+        // Update the component for the current match
+        match.component_idx = merged_component_idx;
+        _matching_bottom_lines.pop_back();
+    }
+
+    // Update bottom lines that refer to components that were merged into the first one
+    if(!erased_component_idx.empty()) {
+        const auto update_if_needed = [&erased_component_idx, &merged_component_idx](bottom_line& match) {
+            if(erased_component_idx.contains(match.component_idx)) {
+                match.component_idx = merged_component_idx;
+            }
+        };
+        // For the previous line, we only need to update matches after the last match we processed
+        std::for_each(last_match_it + 1, _bottom_points.end(), update_if_needed);
+        // For the current line, update all matches already created
+        std::ranges::for_each(_next_points, update_if_needed);
+    }
+
+    // Close the path on the left + link the bottom
+    ROL_ASSERT(_matching_bottom_lines.size() == 1, "There should be exactly one match left after linking all components together");
+    bottom_line& first_match = *_matching_bottom_lines.front();
+    if(pt != nullptr) {
+        // Link with the next content component
+        pt->next = first_match.start_point->next;
+        _components[first_match.component_idx]->path.is_simple = false;
+    }
+    if(x == first_match.x_start) {
+        pt = first_match.start_point;
+        pt->y++;
+    } else {
+        //              |               |
+        // p1 O---------O---x--->---x---O
+        //    |        start_point
+        // pt O-------------------------->--------------O last_next
+        _components[first_match.component_idx]->path.is_simple = false;
+        std::shared_ptr<path_point> p1 = path_point::make(x, y);
+        first_match.start_point->next = p1;
+        pt = path_point::make(x, y+1);
+        p1->next = pt;
+    }
+    pt->next = last_next;
+
+    if(update_last_match) {
+        // Since the last match might be needed by a later group, we must update its information
+        last_match_it->start_point = last_next->next;
+        last_match_it->x_start = last_match_it->start_point->x;
+    }
+
+    _next_points.push_back(bottom_line{ .component_idx = merged_component_idx, .start_point = pt, .x_start = x, .x_end = next_x });
 }
 
 
@@ -201,14 +285,11 @@ void svg_generator::process(const rol::rgb_image& img) {
                     break;
                 }
             }
-            // If there are more than 1 matches there is the risk for multiple matches with the same component, which generates
-            // strange geometries. For now, we'll only consider cases where there is a single adjacent match.
-            if(_matching_bottom_lines.size() == 1) {
-                bottom_line& current_point = *_matching_bottom_lines.front();
-                std::shared_ptr<path_point> pt = aggregate_simple_line(current_point, *_components[current_point.component_idx], x, next_x, y);
-                _next_points.push_back(bottom_line{ .component_idx = current_point.component_idx, .start_point = pt, .x_start = x, .x_end = next_x });
-            } else {
+            remove_multiple_line_matches();
+            if(_matching_bottom_lines.empty()) {
                 add_simple_component(row[x], y, x, next_x);
+            } else {
+                aggregate_with_matched_points(y, x, next_x);
             }
             x = next_x;
         }
