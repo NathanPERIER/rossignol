@@ -63,6 +63,7 @@ struct connected_component {
 
     rol::rgba colour;
     polygonal_path path;
+    std::vector<polygonal_path> holes;
 };
 
 /// @brief Finds the index of the next pixel whose colour is not the same as a given pixel on a row
@@ -137,31 +138,6 @@ void svg_generator::process_first_line(std::span<const rol::rgba> row) {
 }
 
 
-void svg_generator::remove_multiple_line_matches() {
-    if(_matching_bottom_lines.empty()) {
-        return;
-    }
-
-    std::unordered_set<std::size_t> component_matches;
-    std::unordered_set<std::size_t> duplicates;
-
-    for(const bottom_iterator& match: _matching_bottom_lines) {
-        const bool inserted = component_matches.insert(match->component_idx).second;
-        if(!inserted) {
-            duplicates.insert(match->component_idx);
-        }
-    }
-
-    if(duplicates.empty()) {
-        return;
-    }
-
-    std::erase_if(_matching_bottom_lines, [&duplicates](const bottom_iterator& match) -> bool {
-        return duplicates.contains(match->component_idx);
-    });
-}
-
-
 void svg_generator::aggregate_with_matched_points(std::size_t y, std::size_t x, std::size_t next_x) {
     ROL_ASSERT(!_matching_bottom_lines.empty(), "This method is only for cases where we have matching points on the bottom line");
 
@@ -191,27 +167,62 @@ void svg_generator::aggregate_with_matched_points(std::size_t y, std::size_t x, 
         update_last_match = (next_x < last_match_it->x_end);
     }
 
-    // Link each component with the previous
+    // Utility to link with the next match (previously processed), if any
     std::shared_ptr<path_point> pt = nullptr;
-    while(_matching_bottom_lines.size() > 1) {
-        bottom_line& match = *_matching_bottom_lines.back();
-        if(pt != nullptr) {
+    std::unordered_set<std::size_t> prev_components;
+    const auto link_with_next = [this, &pt, &prev_components](bottom_line& match) -> bool {
+        if(pt == nullptr) {
+            return false;
+        }
+        if(prev_components.contains(match.component_idx)) {
+            // O               O---------->----------O
+            // |      (*)      |                     |
+            // O------->-------O----------<----------O
+            // start_point            (implicit)     pt
+            //
+            // (*): This link is incorrect at the moment but will (should) be removed later
+            pt->next = nullptr;
+            _components[match.component_idx]->holes.push_back(polygonal_path {
+                .start = match.start_point->next,
+                .end = pt,
+                .is_simple = false
+            });
+        } else {
+            // |        (*)        |             |
+            // O--------->---------O------<------O
+            // start_point                       pt
+            //
+            // (*): This link is incorrect at the moment but will (should) be removed later
             pt->next = match.start_point->next;
         }
+        return true;
+    };
+
+    // Link each component with the previous
+    while(_matching_bottom_lines.size() > 1) {
+        bottom_line& match = *_matching_bottom_lines.back();
+        link_with_next(match);
+        prev_components.insert(match.component_idx);
         pt = match.start_point;
-        // Close the component at the existing start/end (since we open it elsewhere to allow linking)
-        std::shared_ptr<connected_component> component = _components[match.component_idx];
-        component->path.end->next = component->path.start;
-        // Remove the component by setting the pointer to null in the global list
-        _components[match.component_idx] = nullptr;
-        erased_component_idx.insert(match.component_idx);
-        // Update the component for the current match
-        match.component_idx = merged_component_idx;
         _matching_bottom_lines.pop_back();
+        // Update records for components that are not the final merged component
+        if(match.component_idx != merged_component_idx) {
+            // Remove the component if it was not already done
+            std::shared_ptr<connected_component> component = _components[match.component_idx];
+            if(component != nullptr) {
+                // Close the component at the existing start/end (since we open it elsewhere to allow linking)
+                component->path.end->next = component->path.start;
+                // Flag the component for erasure
+                erased_component_idx.insert(match.component_idx);
+            }
+            // Update the component for the current match
+            match.component_idx = merged_component_idx;
+        }
     }
 
     // Update bottom lines that refer to components that were merged into the first one
     if(!erased_component_idx.empty()) {
+        ROL_ASSERT(!erased_component_idx.contains(merged_component_idx), "The component of the first match should not be marked as removed");
         const auto update_if_needed = [&erased_component_idx, &merged_component_idx](bottom_line& match) {
             if(erased_component_idx.contains(match.component_idx)) {
                 match.component_idx = merged_component_idx;
@@ -221,14 +232,18 @@ void svg_generator::aggregate_with_matched_points(std::size_t y, std::size_t x, 
         std::for_each(last_match_it + 1, _bottom_points.end(), update_if_needed);
         // For the current line, update all matches already created
         std::ranges::for_each(_next_points, update_if_needed);
+        // Erase all flagged components by setting the pointers to null
+        for(const std::size_t& idx: erased_component_idx) {
+            _components[idx] = nullptr;
+        }
     }
 
     // Close the path on the left + link the bottom
     ROL_ASSERT(_matching_bottom_lines.size() == 1, "There should be exactly one match left after linking all components together");
     bottom_line& first_match = *_matching_bottom_lines.front();
-    if(pt != nullptr) {
-        // Link with the next content component
-        pt->next = first_match.start_point->next;
+    ROL_ASSERT(first_match.component_idx == merged_component_idx, "The component of the first match should be the one in which everything is being merged");
+    ROL_ASSERT(_components[first_match.component_idx] != nullptr, "The component of the first match should never be removed");
+    if(link_with_next(first_match)) {
         _components[first_match.component_idx]->path.is_simple = false;
     }
     if(x == first_match.x_start) {
@@ -285,7 +300,6 @@ void svg_generator::process(const rol::rgb_image& img) {
                     break;
                 }
             }
-            remove_multiple_line_matches();
             if(_matching_bottom_lines.empty()) {
                 add_simple_component(row[x], y, x, next_x);
             } else {
