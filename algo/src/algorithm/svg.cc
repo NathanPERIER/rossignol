@@ -346,6 +346,13 @@ struct fmt::formatter<::connected_component> {
     }
 
     auto format(const connected_component& component, fmt::format_context& ctx) const -> fmt::format_context::iterator {
+        if(!component.holes.empty()) {
+            fmt::format_to(ctx.out(), R"__(<path d="M {} z)__", component.path);
+            for(const polygonal_path& cutout: component.holes) {
+                fmt::format_to(ctx.out(), " M {} z", cutout);
+            }
+            return fmt::format_to(ctx.out(), R"__(" fill="{}" fill-rule="evenodd"/>)__", component.colour);
+        }
         if(component.path.is_simple) {
             const path_point& p1 = *component.path.start;
             const path_point& p2 = *p1.next;
