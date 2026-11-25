@@ -1,6 +1,7 @@
 
 rossignol_demo_names = [
-    'filters'
+    'filters',
+    'svg'
 ]
 
 all_demos = []
