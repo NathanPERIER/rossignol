@@ -366,6 +366,36 @@ struct fmt::formatter<::connected_component> {
 
 namespace rol::algo {
 
+std::vector<svg_tile> get_svg_tiles(const rgb_image& img) {
+    std::vector<svg_tile> res;
+
+    static const auto convert_path = [](::path_point* point) -> svg_tile::path {
+        svg_tile::path res;
+        while(point != nullptr) {
+            res.push_back(math::vec2u{ .x = point->x, .y = point->y });
+            point = point->next.get();
+        }
+        return res;
+    };
+
+    ::svg_generator generator;
+    generator.process(img);
+    for(const std::shared_ptr<::connected_component>& component: generator.connected_components()) {
+        if(component == nullptr) {
+            continue;
+        }
+        res.push_back(svg_tile {
+            .fill_colour = component->colour,
+            .outline = convert_path(component->path.start.get())
+        });
+        for(const ::polygonal_path& hole: component->holes) {
+            res.back().holes.push_back(convert_path(hole.start.get()));
+        }
+    }
+
+    return res;
+}
+
 std::string to_svg(const rgb_image& img, const params::svg_options& opts) {
     using namespace std::string_view_literals;
     ::svg_generator generator;
