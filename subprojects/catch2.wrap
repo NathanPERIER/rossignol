@@ -1,0 +1,9 @@
+[wrap-git]
+directory = catch2-3.16.1
+url = https://github.com/catchorg/Catch2.git
+revision = 08092139210881f01a34e60c5f2fd6afa0ea4024
+clone-recursive = false
+
+[provide]
+catch2 = catch2_dep
+catch2-with-main = catch2_with_main_dep
