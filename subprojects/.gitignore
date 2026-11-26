@@ -6,5 +6,6 @@
 !.gitignore
 
 # Exceptions for wrap files
+!/catch2.wrap
 !/fmt.wrap
 !/spdlog.wrap

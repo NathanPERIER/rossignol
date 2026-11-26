@@ -24,6 +24,8 @@ spdlog_dep = declare_dependency(
 
 png_dep = dependency('libpng')
 
+catch2_dep = dependency('catch2-with-main', required: true)
+
 
 rossignol_build_default = not meson.is_subproject()
 
