@@ -11,6 +11,7 @@ rossignol_generic_sources = [
     'generic/greyscale.cc',
     'generic/invert.cc',
     'generic/mirror.cc',
+    'generic/prepare_write.cc',
     'generic/rgb.cc',
     'generic/sinks/file.cc',
     'params/generic/offset.cc',
