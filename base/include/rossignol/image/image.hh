@@ -1,15 +1,9 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cstdint>
-#include <memory>
-#include <span>
-#include <vector>
-
 #include "rossignol/colour/rgb.hh"
 #include "rossignol/colour/greyscale.hh"
-#include "rossignol/math/vec2.hh"
+#include "rossignol/image/pixel_buffer.hh"
 
 
 namespace rol {
@@ -17,20 +11,12 @@ namespace rol {
 template <typename Colour>
 class basic_image {
 public:
-    basic_image(math::vec2u size): _size(size), _pixels(std::make_shared<Colour[]>(_size.x * _size.y)), _rows(std::make_shared<std::vector<std::span<Colour>>>()) {
-        if(size.x == 0 || size.y == 0) {
-            throw std::runtime_error("Refusing to create an empty image");
-        }
-        _rows->reserve(_size.y);
-        for(std::size_t y = 0; y < _size.y; y++) {
-            _rows->push_back(std::span<Colour>(_pixels.get() + _size.x * y, _size.x));
-        }
-    }
+    basic_image(const math::vec2u& size): basic_image(std::make_shared<buffer_type>(size)) {}
 
     /// @brief creates a plain image filled with a given colour
-    basic_image(math::vec2u size, Colour fill): basic_image(size) {
-        for(const std::span<Colour> row: *_rows) {
-            std::fill(row.begin(), row.end(), fill);
+    basic_image(const math::vec2u& size, Colour fill): basic_image(size) {
+        for(std::size_t y = 0; y < height(); y++) {
+            std::ranges::fill((*this)[y], fill);
         }
     }
 
@@ -38,41 +24,34 @@ public:
     basic_image<Colour>& operator=(basic_image<Colour>&&) = default;
 
     /// @brief creates a new image that points to the same underlying buffer as the current image
-    basic_image<Colour> share() const { return basic_image<Colour>(*this); }
+    basic_image<Colour> share() { return basic_image<Colour>(*this); }
+
+    basic_image<Colour> sub_image(const math::vec2u& offset, const math::vec2u& size) {
+        return basic_image<Colour>(_buffer->sub_buffer(offset, size));
+    }
 
     /// @brief creates copy of the current image
     basic_image<Colour> clone() const {
-        basic_image<Colour> res(_size);
-        for(std::size_t y = 0; y < _size.y; y++) {
-            const std::span<const Colour> row = (*_rows)[y];
-            std::copy(row.begin(), row.end(), res[y].begin());
-        }
-        return res;
+        return basic_image<Colour>(std::make_shared<buffer_type>(_buffer->clone()));
     }
 
-    const math::vec2u& size() const { return _size; }
-    std::size_t width() const { return _size.x; }
-    std::size_t height() const { return _size.y; }
+    const math::vec2u& size() const { return _buffer->size(); }
+    std::size_t width() const { return _buffer->width(); }
+    std::size_t height() const { return _buffer->height(); }
 
-    Colour& at(std::size_t y, std::size_t x) { return (*_rows)[y][x]; }
-    const Colour& at(std::size_t y, std::size_t x) const { return (*_rows)[y][x]; }
-
-    std::span<Colour> operator[](std::size_t y) { return (*_rows)[y]; }
-    std::span<const Colour> operator[](std::size_t y) const { return (*_rows)[y]; }
+    std::span<Colour> operator[](std::size_t y) { return (*_buffer)[y]; }
+    std::span<const Colour> operator[](std::size_t y) const { return (*_buffer)[y]; }
 
     void invert_y() {
-        std::shared_ptr<std::vector<std::span<Colour>>> rows = std::make_shared<std::vector<std::span<Colour>>>();
-        rows->reserve(_rows->size());
-        for(auto it = _rows->rbegin(); it != _rows->rend(); ++it) {
-            rows->push_back(*it);
-        }
-        _rows = std::move(rows);
+        _buffer = std::make_shared<buffer_type>(*_buffer);
+        _buffer->invert_y();
     }
 
 private:
-    math::vec2u _size;
-    std::shared_ptr<Colour[]> _pixels;
-    std::shared_ptr<std::vector<std::span<Colour>>> _rows;
+    using buffer_type = pixel_buffer<Colour>;
+    std::shared_ptr<buffer_type> _buffer;
+
+    basic_image(std::shared_ptr<buffer_type>&& buf): _buffer(std::move(buf)) {}
 
     basic_image(const basic_image<Colour>&) = default;
     basic_image<Colour>& operator=(const basic_image<Colour>&) = default;
