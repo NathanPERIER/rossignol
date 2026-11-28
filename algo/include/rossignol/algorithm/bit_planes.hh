@@ -2,7 +2,8 @@
 #pragma once
 
 #include "rossignol/algorithm/map_pixels.hh"
-#include "rossignol/image/image.hh"
+#include "rossignol/image/binary_image.hh"
+#include "rossignol/image/channel.hh"
 
 
 namespace rol::algo {

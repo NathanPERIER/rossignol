@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "rossignol/image/image.hh"
+#include "rossignol/image/coefficient_plane.hh"
 #include "rossignol/params/filters.hh"
 
 

@@ -3,6 +3,11 @@
 
 #include "rossignol/algorithm/map_pixels.hh"
 #include "rossignol/algorithm/overlaying.hh"
+#include "rossignol/image/binary_image.hh"
+#include "rossignol/image/channel.hh"
+#include "rossignol/image/coefficient_plane.hh"
+#include "rossignol/image/greyscale_image.hh"
+#include "rossignol/image/rgb_image.hh"
 #include "rossignol/math/rect.hh"
 #include "rossignol/params/layer_name.hh"
 #include "rossignol/utils/typing/functional.hh"

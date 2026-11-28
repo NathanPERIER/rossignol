@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "rossignol/image/image.hh"
+#include "rossignol/image/rgb_image.hh"
 #include "rossignol/math/vec2.hh"
 #include "rossignol/params/svg_options.hh"
 

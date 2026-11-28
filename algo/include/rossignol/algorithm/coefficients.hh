@@ -1,7 +1,8 @@
 
 #pragma once
 
-#include "rossignol/image/image.hh"
+#include "rossignol/image/channel.hh"
+#include "rossignol/image/coefficient_plane.hh"
 
 
 namespace rol::algo {

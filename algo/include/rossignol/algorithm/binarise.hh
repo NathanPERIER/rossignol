@@ -1,7 +1,8 @@
 
 #pragma once
 
-#include "rossignol/image/image.hh"
+#include "rossignol/image/binary_image.hh"
+#include "rossignol/image/greyscale_image.hh"
 #include "rossignol/params/binarise.hh"
 
 

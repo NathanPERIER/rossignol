@@ -3,7 +3,7 @@
 
 #include "rossignol/algorithm/map_pixels.hh"
 #include "rossignol/colour/conv/invert.hh"
-#include "rossignol/image/image.hh"
+#include "rossignol/image/basic_image.hh"
 
 
 namespace rol::algo {

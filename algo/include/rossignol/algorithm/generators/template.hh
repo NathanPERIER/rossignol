@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 
-#include "rossignol/image/image.hh"
+#include "rossignol/image/basic_image.hh"
 
 
 namespace rol::algo {

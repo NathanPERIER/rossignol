@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "rossignol/image/image.hh"
+#include "rossignol/image/basic_image.hh"
 #include "rossignol/math/rect.hh"
 #include "rossignol/utils/typing/functional.hh"
 

@@ -3,7 +3,11 @@
 
 #include "rossignol/algorithm/map_pixels.hh"
 #include "rossignol/colour/conv/cylindrical.hh"
-#include "rossignol/image/image.hh"
+#include "rossignol/image/binary_image.hh"
+#include "rossignol/image/channel.hh"
+#include "rossignol/image/coefficient_plane.hh"
+#include "rossignol/image/greyscale_image.hh"
+#include "rossignol/image/rgb_image.hh"
 #include "rossignol/params/colourise.hh"
 #include "rossignol/utils/typing/any_of.hh"
 

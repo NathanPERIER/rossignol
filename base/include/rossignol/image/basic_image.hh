@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "rossignol/colour/rgb.hh"
-#include "rossignol/colour/greyscale.hh"
 #include "rossignol/image/pixel_buffer.hh"
 
 
@@ -56,12 +54,5 @@ private:
     basic_image(const basic_image<Colour>&) = default;
     basic_image<Colour>& operator=(const basic_image<Colour>&) = default;
 };
-
-
-using rgb_image = basic_image<rgba>;
-using greyscale_image = basic_image<greyscalea>;
-using binary_image = basic_image<bool>;
-using layer = basic_image<uint8_t>;
-using coefficient_plane = basic_image<double>;
 
 } // namespace rol
